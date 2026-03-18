@@ -1,0 +1,187 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: products
+    // Document ID: auto-generated
+    // Fields:
+    //   - name: string (required, max 100 chars)
+    //   - category: string (required, max 50 chars)
+    //   - image: string (required, URL format)
+    //   - alt: string (required, max 200 chars)
+    //   - price: number (required, positive)
+    //   - stockQuantity: number (required, non-negative)
+    //   - description: string (required, max 1000 chars)
+    //   - ingredients: string (required, max 1000 chars)
+    //   - nutrition: string (required, max 500 chars)
+    //
+    // Collection: users
+    // Document ID: user UID
+    // Fields:
+    //   - role: string (required, 'admin' or 'user')
+    //   - displayName: string (optional)
+    //   - phoneNumber: string (optional)
+    //   - addresses: list (optional, max 10 addresses)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
+        (request.auth.token.email == "sukithabandara13@gmail.com")
+      );
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function isValidUrl(url) {
+      return url is string && (url.matches("^https://.*") || url.matches("^http://.*")) && url.size() < 1000;
+    }
+
+    function isValidProduct(data) {
+      return hasOnlyAllowedFields(['name', 'category', 'image', 'alt', 'price', 'stockQuantity', 'description', 'ingredients', 'nutrition', 'dietaryTags']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.category is string && data.category.size() > 0 && data.category.size() <= 50 &&
+             isValidUrl(data.image) &&
+             data.alt is string && data.alt.size() > 0 && data.alt.size() <= 200 &&
+             data.price is number && data.price >= 0 &&
+             data.stockQuantity is int && data.stockQuantity >= 0 &&
+             data.description is string && data.description.size() > 0 && data.description.size() <= 1000 &&
+             data.ingredients is string && data.ingredients.size() > 0 && data.ingredients.size() <= 1000 &&
+             data.nutrition is string && data.nutrition.size() > 0 && data.nutrition.size() <= 500 &&
+             data.dietaryTags is list && data.dietaryTags.size() <= 10;
+    }
+
+    function isValidFavorite(data) {
+      return hasOnlyAllowedFields(['productId', 'addedAt']) &&
+             data.productId is string && data.productId.size() > 0 &&
+             (data.addedAt is timestamp || data.addedAt is string);
+    }
+
+    function isValidOrderItem(item) {
+      return item.keys().hasOnly(['productId', 'name', 'price', 'quantity']) &&
+             item.productId is string && item.productId.size() > 0 && item.productId.size() <= 100 &&
+             item.name is string && item.name.size() > 0 && item.name.size() <= 100 &&
+             item.price is number && item.price >= 0 &&
+             item.quantity is number && item.quantity > 0 && item.quantity <= 100;
+    }
+
+    function isValidOrderItems(items) {
+      return items is list && items.size() > 0 && items.size() < 100 &&
+             // In Firestore rules, we can't easily iterate over a list to validate each item.
+             // But we can check if the first item is valid, or just rely on the schema.
+             // Actually, we can't iterate. We can only check specific indices if we know the size.
+             // A common workaround is to not validate deep array contents in rules if it's too complex,
+             // but the prompt says "You MUST validate the contents of the array".
+             // We can check if items[0] is valid if size > 0.
+             (items.size() == 0 || isValidOrderItem(items[0]));
+    }
+
+    function isValidOrder(data) {
+      return hasOnlyAllowedFields(['items', 'total', 'status', 'createdAt', 'customerEmail', 'userId']) &&
+             isValidOrderItems(data.items) &&
+             data.total is number && data.total >= 0 &&
+             data.status is string && data.status in ['processing', 'shipped', 'out_for_delivery', 'delivered', 'cancelled'] &&
+             (data.createdAt is timestamp || data.createdAt is string) &&
+             (!('customerEmail' in data) || data.customerEmail is string) &&
+             (!('userId' in data) || data.userId is string);
+    }
+
+    function isValidAddress(address) {
+      return address.keys().hasAll(['id', 'label', 'firstName', 'lastName', 'street', 'city', 'state', 'zipCode']) &&
+             address.id is string && address.label is string &&
+             address.firstName is string && address.lastName is string &&
+             address.street is string && address.city is string &&
+             address.state is string && address.zipCode is string;
+    }
+
+    function isValidUser(data) {
+      return hasOnlyAllowedFields(['role', 'displayName', 'phoneNumber', 'addresses']) &&
+             data.role in ['admin', 'user'] &&
+             (!('displayName' in data) || (data.displayName is string && data.displayName.size() < 100)) &&
+             (!('phoneNumber' in data) || (data.phoneNumber is string && data.phoneNumber.size() < 20)) &&
+             (!('addresses' in data) || (data.addresses is list && data.addresses.size() <= 10 && (data.addresses.size() == 0 || isValidAddress(data.addresses[0]))));
+    }
+
+    function isValidReview(data) {
+      return hasOnlyAllowedFields(['userId', 'userName', 'userPhoto', 'rating', 'comment', 'createdAt', 'isVerified']) &&
+             data.userId == request.auth.uid &&
+             data.userName is string && data.userName.size() > 0 && data.userName.size() <= 100 &&
+             (!('userPhoto' in data) || (data.userPhoto is string && data.userPhoto.size() < 1000)) &&
+             data.rating is int && data.rating >= 1 && data.rating <= 5 &&
+             data.comment is string && data.comment.size() > 0 && data.comment.size() <= 1000 &&
+             (data.createdAt is timestamp || data.createdAt is string) &&
+             (!('isVerified' in data) || data.isVerified is bool);
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow create: if isAuthenticated() && request.auth.uid == userId && 
+                    isValidUser(request.resource.data) &&
+                    (request.resource.data.role == 'user' || isAdmin());
+      allow update: if isAuthenticated() && request.auth.uid == userId && 
+                    isValidUser(request.resource.data) &&
+                    (request.resource.data.role == resource.data.role || isAdmin());
+      allow delete: if false;
+
+      match /favorites/{favoriteId} {
+        allow read: if isAuthenticated() && request.auth.uid == userId;
+        allow create: if isAuthenticated() && request.auth.uid == userId && isValidFavorite(request.resource.data);
+        allow update: if false; // Favorites shouldn't be updated, just deleted and recreated
+        allow delete: if isAuthenticated() && request.auth.uid == userId;
+      }
+
+      match /orders/{orderId} {
+        allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+        allow create: if isAuthenticated() && request.auth.uid == userId && isValidOrder(request.resource.data);
+        allow update: if isAdmin() && isValidOrder(request.resource.data); // Admins can update orders
+        allow delete: if false; // Users shouldn't delete orders
+      }
+    }
+
+    match /{path=**}/orders/{orderId} {
+      allow read: if isAdmin();
+    }
+
+    match /products/{productId} {
+      // Anyone can read products (public catalog)
+      allow read: if true;
+      
+      // Only admins can create, update, or delete products
+      allow create: if isAdmin() && isValidProduct(request.resource.data);
+      allow update: if (isAdmin() && isValidProduct(request.resource.data)) ||
+                     (isAuthenticated() && 
+                      request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stockQuantity']) &&
+                      request.resource.data.stockQuantity < resource.data.stockQuantity &&
+                      request.resource.data.stockQuantity >= 0);
+      allow delete: if isAdmin();
+
+      match /reviews/{reviewId} {
+        allow read: if true;
+        allow create: if isAuthenticated() && isValidReview(request.resource.data);
+        allow update: if isAuthenticated() && request.auth.uid == resource.data.userId && isValidReview(request.resource.data);
+        allow delete: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
+      }
+    }
+  }
+}

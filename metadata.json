@@ -1,0 +1,5 @@
+{
+  "name": "Magnolia Bakery App",
+  "description": "A bakery application with user authentication, product catalog, shopping cart, and an admin dashboard for managing orders.",
+  "requestFramePermissions": []
+}
