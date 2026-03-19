@@ -16,6 +16,8 @@ import { AccountPage } from './components/AccountPage';
 import { Invoice } from './components/Invoice';
 import { FilterBar } from './components/FilterBar';
 import { useToast } from './components/Toast';
+import { useTheme } from './hooks/useTheme';
+import { ChatBot } from './components/ChatBot';
 
 export interface Product {
   id?: string;
@@ -195,7 +197,10 @@ import {
   ChevronLeft,
   SearchX,
   ArrowUp,
-  CheckCircle
+  CheckCircle,
+  Sun,
+  Moon,
+  LogOut
 } from 'lucide-react';
 import { db, auth } from './firebase';
 import { collection, onSnapshot, doc, setDoc, getDocs, deleteDoc, getDoc, serverTimestamp, runTransaction } from 'firebase/firestore';
@@ -316,6 +321,7 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
 
 function MainApp() {
   const { addToast } = useToast();
+  const { theme, toggleTheme, isDark } = useTheme();
   const [user, setUser] = useState<User | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
@@ -739,7 +745,7 @@ function MainApp() {
     </div>
   );
 
-  const ProductCard = ({ product, index }: { product: Product, index: number, key?: any }) => (
+  const ProductCard = React.memo(({ product, index }: { product: Product, index: number, key?: any }) => (
     <motion.div 
       variants={{
         hidden: { opacity: 0, y: 20 },
@@ -794,7 +800,7 @@ function MainApp() {
       </div>
       <p className="font-bold text-primary text-center">${product.price.toFixed(2)}</p>
     </motion.div>
-  );
+  ));
 
   return (
     <AnimatePresence mode="wait">
@@ -840,6 +846,20 @@ function MainApp() {
                 </nav>
               </div>
               <div className="flex items-center gap-2 lg:gap-4">
+                {/* Dark Mode Toggle */}
+                <button
+                  onClick={toggleTheme}
+                  className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+                  aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+                  title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+                >
+                  {isDark ? (
+                    <Sun className="w-5 h-5 text-yellow-400" />
+                  ) : (
+                    <Moon className="w-5 h-5 text-gray-600" />
+                  )}
+                </button>
+
                 <div className="hidden xl:flex items-center bg-slate-100 dark:bg-slate-800 rounded-full px-4 py-2 border border-slate-200/50 dark:border-slate-700/50">
                   <Search className="w-4 h-4 text-slate-500 mr-2" />
                   <input className="bg-transparent border-none focus:outline-none focus:ring-0 text-sm w-32 placeholder:text-slate-500" placeholder="Search" type="text" />
@@ -1428,6 +1448,7 @@ function MainApp() {
             </form>
           </div>
         </section>
+            <ChatBot products={products} onViewProduct={setViewingProduct} />
           </motion.div>
         )}
         </AnimatePresence>

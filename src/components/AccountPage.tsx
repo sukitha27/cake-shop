@@ -3,8 +3,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import { User, signOut } from 'firebase/auth';
 import { doc, getDoc, updateDoc, collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { db, auth } from '../firebase';
-import { User as UserIcon, MapPin, Phone, Package, LogOut, ChevronRight, Plus, Trash2, Check, X, ShoppingBag } from 'lucide-react';
+import { User as UserIcon, MapPin, Phone, Package, LogOut, ChevronRight, Plus, Trash2, Check, X, ShoppingBag, Award } from 'lucide-react';
 import { handleFirestoreError, OperationType, Product } from '../App';
+import { LoyaltyCard } from './LoyaltyCard';
 
 export interface Address {
   id: string;
@@ -23,6 +24,7 @@ interface UserProfile {
   displayName?: string;
   phoneNumber?: string;
   addresses?: Address[];
+  points?: number;
 }
 
 interface Order {
@@ -44,7 +46,7 @@ interface AccountPageProps {
 export function AccountPage({ user, onBack, onReorder, products, onViewInvoice }: AccountPageProps) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
-  const [activeTab, setActiveTab] = useState<'profile' | 'addresses' | 'orders'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'addresses' | 'orders' | 'loyalty'>('profile');
   const [isLoading, setIsLoading] = useState(true);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isAddingAddress, setIsAddingAddress] = useState(false);
@@ -230,6 +232,13 @@ export function AccountPage({ user, onBack, onReorder, products, onViewInvoice }
                 >
                   <Package size={20} />
                   Order History
+                </button>
+                <button 
+                  onClick={() => setActiveTab('loyalty')}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'loyalty' ? 'bg-primary text-slate-900 font-bold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                >
+                  <Award size={20} />
+                  Loyalty & Rewards
                 </button>
                 <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800">
                   <button 
@@ -581,6 +590,16 @@ export function AccountPage({ user, onBack, onReorder, products, onViewInvoice }
                       )}
                     </div>
                   </div>
+                </motion.div>
+              )}
+              {activeTab === 'loyalty' && (
+                <motion.div
+                  key="loyalty"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                >
+                  <LoyaltyCard points={profile?.points || 0} />
                 </motion.div>
               )}
             </AnimatePresence>
