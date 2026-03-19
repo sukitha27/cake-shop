@@ -38,9 +38,10 @@ interface AccountPageProps {
   onBack: () => void;
   onReorder: (items: any[]) => void;
   products: Product[];
+  onViewInvoice: (order: any) => void;
 }
 
-export function AccountPage({ user, onBack, onReorder, products }: AccountPageProps) {
+export function AccountPage({ user, onBack, onReorder, products, onViewInvoice }: AccountPageProps) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [activeTab, setActiveTab] = useState<'profile' | 'addresses' | 'orders'>('profile');
@@ -560,8 +561,11 @@ export function AccountPage({ user, onBack, onReorder, products }: AccountPagePr
                                   <ShoppingBag size={18} />
                                   Buy it again
                                 </button>
-                                <button className="text-slate-500 hover:text-slate-900 dark:hover:text-white text-sm font-semibold transition-all">
-                                  View Order Details
+                                <button 
+                                  onClick={() => onViewInvoice(order)}
+                                  className="text-slate-500 hover:text-slate-900 dark:hover:text-white text-sm font-semibold transition-all"
+                                >
+                                  View Invoice
                                 </button>
                               </div>
                             </div>

@@ -8,11 +8,12 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ProductDetails } from './components/ProductDetails';
 import { CartDrawer } from './components/CartDrawer';
-import { Checkout } from './components/Checkout';
+import { Checkout, ShippingInfo } from './components/Checkout';
 import { Testimonials } from './components/Testimonials';
 import { OrderTracker } from './components/OrderTracker';
 import { AdminDashboard } from './components/AdminDashboard';
 import { AccountPage } from './components/AccountPage';
+import { Invoice } from './components/Invoice';
 import { FilterBar } from './components/FilterBar';
 import { useToast } from './components/Toast';
 
@@ -319,6 +320,7 @@ function MainApp() {
   const [products, setProducts] = useState<Product[]>([]);
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
   const [orders, setOrders] = useState<any[]>([]);
+  const [selectedInvoiceOrder, setSelectedInvoiceOrder] = useState<any | null>(null);
   const [currentView, setCurrentView] = useState<'home' | 'orders' | 'favorites' | 'admin' | 'account'>('home');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -346,8 +348,26 @@ function MainApp() {
   }, []);
 
   React.useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
+      if (currentUser) {
+        // Ensure user document exists in Firestore
+        const userRef = doc(db, 'users', currentUser.uid);
+        try {
+          const userSnap = await getDoc(userRef);
+          if (!userSnap.exists()) {
+            await setDoc(userRef, {
+              role: currentUser.email === 'sukithabandara13@gmail.com' ? 'admin' : 'user',
+              email: currentUser.email || '',
+              displayName: currentUser.displayName || '',
+              phoneNumber: '',
+              addresses: []
+            });
+          }
+        } catch (error) {
+          console.error("Error ensuring user document exists:", error);
+        }
+      }
     });
 
     const productsRef = collection(db, 'products');
@@ -550,7 +570,7 @@ function MainApp() {
     setAddedItems(prev => ({ ...prev, [productName]: false }));
   };
 
-  const handlePlaceOrder = async (email: string) => {
+  const handlePlaceOrder = async (email: string, shippingInfo: ShippingInfo) => {
     const items = Object.values(cartItems) as { product: Product, quantity: number }[];
     
     if (!user) {
@@ -594,13 +614,22 @@ function MainApp() {
         const total = items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
         
         const orderRef = doc(collection(db, 'users', user.uid, 'orders'));
-        transaction.set(orderRef, {
+        const orderData = {
           items: orderItems,
           total,
           status: 'processing',
           createdAt: serverTimestamp(),
           customerEmail: email,
+          shippingInfo,
           userId: user.uid
+        };
+        transaction.set(orderRef, orderData);
+        
+        // Store for invoice display
+        setSelectedInvoiceOrder({
+          id: orderRef.id,
+          ...orderData,
+          createdAt: new Date() // Temporary for immediate display
         });
       });
 
@@ -994,6 +1023,7 @@ function MainApp() {
               onBack={() => setCurrentView('home')} 
               onReorder={handleReorder}
               products={products}
+              onViewInvoice={setSelectedInvoiceOrder}
             />
           </motion.div>
         ) : currentView === 'favorites' ? (
@@ -1542,6 +1572,15 @@ function MainApp() {
         isOpen={!!trackingOrder}
         onClose={() => setTrackingOrder(null)}
       />
+
+      <AnimatePresence>
+        {selectedInvoiceOrder && (
+          <Invoice 
+            order={selectedInvoiceOrder} 
+            onClose={() => setSelectedInvoiceOrder(null)} 
+          />
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {showScrollTop && (

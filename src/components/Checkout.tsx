@@ -43,7 +43,16 @@ interface CartItem {
 interface CheckoutProps {
   cartItems: Record<string, CartItem>;
   onBack: () => void;
-  onPlaceOrder: (email: string) => Promise<void>;
+  onPlaceOrder: (email: string, shippingInfo: ShippingInfo) => Promise<void>;
+}
+
+export interface ShippingInfo {
+  firstName: string;
+  lastName: string;
+  address: string;
+  city: string;
+  state: string;
+  zip: string;
 }
 
 export function Checkout({ cartItems, onBack, onPlaceOrder }: CheckoutProps) {
@@ -57,6 +66,14 @@ export function Checkout({ cartItems, onBack, onPlaceOrder }: CheckoutProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isMobileSummaryOpen, setIsMobileSummaryOpen] = useState(false);
   const [email, setEmail] = useState('');
+  const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({
+    firstName: '',
+    lastName: '',
+    address: '',
+    city: '',
+    state: '',
+    zip: ''
+  });
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'apple_pay' | 'paypal' | 'google_pay' | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -76,7 +93,7 @@ export function Checkout({ cartItems, onBack, onPlaceOrder }: CheckoutProps) {
     // Simulate API call
     setTimeout(async () => {
       try {
-        await onPlaceOrder(email);
+        await onPlaceOrder(email, shippingInfo);
         addToast("Order placed successfully!", "success");
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Failed to place order. Please try again.";
@@ -143,11 +160,27 @@ export function Checkout({ cartItems, onBack, onPlaceOrder }: CheckoutProps) {
               <div className="grid grid-cols-2 gap-6">
                 <div className="col-span-2 sm:col-span-1">
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">First Name</label>
-                  <input required type="text" autoComplete="given-name" placeholder="Jane" className="w-full px-5 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-background-dark text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" />
+                  <input 
+                    required 
+                    type="text" 
+                    autoComplete="given-name" 
+                    placeholder="Jane" 
+                    value={shippingInfo.firstName}
+                    onChange={(e) => setShippingInfo(prev => ({ ...prev, firstName: e.target.value }))}
+                    className="w-full px-5 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-background-dark text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" 
+                  />
                 </div>
                 <div className="col-span-2 sm:col-span-1">
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Last Name</label>
-                  <input required type="text" autoComplete="family-name" placeholder="Doe" className="w-full px-5 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-background-dark text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" />
+                  <input 
+                    required 
+                    type="text" 
+                    autoComplete="family-name" 
+                    placeholder="Doe" 
+                    value={shippingInfo.lastName}
+                    onChange={(e) => setShippingInfo(prev => ({ ...prev, lastName: e.target.value }))}
+                    className="w-full px-5 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-background-dark text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" 
+                  />
                 </div>
                 <div className="col-span-2">
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Email Address</label>
@@ -163,20 +196,53 @@ export function Checkout({ cartItems, onBack, onPlaceOrder }: CheckoutProps) {
                 </div>
                 <div className="col-span-2">
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Street Address</label>
-                  <input required type="text" autoComplete="street-address" placeholder="123 Magnolia Lane" className="w-full px-5 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-background-dark text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" />
+                  <input 
+                    required 
+                    type="text" 
+                    autoComplete="street-address" 
+                    placeholder="123 Magnolia Lane" 
+                    value={shippingInfo.address}
+                    onChange={(e) => setShippingInfo(prev => ({ ...prev, address: e.target.value }))}
+                    className="w-full px-5 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-background-dark text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" 
+                  />
                 </div>
                 <div className="col-span-2 sm:col-span-1">
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">City</label>
-                  <input required type="text" autoComplete="address-level2" placeholder="New York" className="w-full px-5 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-background-dark text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" />
+                  <input 
+                    required 
+                    type="text" 
+                    autoComplete="address-level2" 
+                    placeholder="New York" 
+                    value={shippingInfo.city}
+                    onChange={(e) => setShippingInfo(prev => ({ ...prev, city: e.target.value }))}
+                    className="w-full px-5 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-background-dark text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" 
+                  />
                 </div>
                 <div className="grid grid-cols-2 gap-4 col-span-2 sm:col-span-1">
                   <div>
                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">State</label>
-                    <input required type="text" autoComplete="address-level1" placeholder="NY" className="w-full px-5 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-background-dark text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" />
+                    <input 
+                      required 
+                      type="text" 
+                      autoComplete="address-level1" 
+                      placeholder="NY" 
+                      value={shippingInfo.state}
+                      onChange={(e) => setShippingInfo(prev => ({ ...prev, state: e.target.value }))}
+                      className="w-full px-5 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-background-dark text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" 
+                    />
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">ZIP</label>
-                    <input required type="text" autoComplete="postal-code" inputMode="numeric" placeholder="10001" className="w-full px-5 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-background-dark text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" />
+                    <input 
+                      required 
+                      type="text" 
+                      autoComplete="postal-code" 
+                      inputMode="numeric" 
+                      placeholder="10001" 
+                      value={shippingInfo.zip}
+                      onChange={(e) => setShippingInfo(prev => ({ ...prev, zip: e.target.value }))}
+                      className="w-full px-5 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-background-dark text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" 
+                    />
                   </div>
                 </div>
               </div>

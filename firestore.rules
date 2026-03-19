@@ -24,6 +24,7 @@ service cloud.firestore {
     // Document ID: user UID
     // Fields:
     //   - role: string (required, 'admin' or 'user')
+    //   - email: string (optional)
     //   - displayName: string (optional)
     //   - phoneNumber: string (optional)
     //   - addresses: list (optional, max 10 addresses)
@@ -42,7 +43,7 @@ service cloud.firestore {
       return isAuthenticated() && (
         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
-        (request.auth.token.email == "sukithabandara13@gmail.com")
+        (request.auth.token.email == "sukithabandara13@gmail.com" && request.auth.token.email_verified == true)
       );
     }
 
@@ -108,12 +109,14 @@ service cloud.firestore {
              address.id is string && address.label is string &&
              address.firstName is string && address.lastName is string &&
              address.street is string && address.city is string &&
-             address.state is string && address.zipCode is string;
+             address.state is string && address.zipCode is string &&
+             (!('isDefault' in address) || address.isDefault is bool);
     }
 
     function isValidUser(data) {
-      return hasOnlyAllowedFields(['role', 'displayName', 'phoneNumber', 'addresses']) &&
+      return hasOnlyAllowedFields(['role', 'email', 'displayName', 'phoneNumber', 'addresses']) &&
              data.role in ['admin', 'user'] &&
+             (!('email' in data) || (data.email is string && data.email.size() < 255)) &&
              (!('displayName' in data) || (data.displayName is string && data.displayName.size() < 100)) &&
              (!('phoneNumber' in data) || (data.phoneNumber is string && data.phoneNumber.size() < 20)) &&
              (!('addresses' in data) || (data.addresses is list && data.addresses.size() <= 10 && (data.addresses.size() == 0 || isValidAddress(data.addresses[0]))));
@@ -141,7 +144,7 @@ service cloud.firestore {
                     (request.resource.data.role == 'user' || isAdmin());
       allow update: if isAuthenticated() && request.auth.uid == userId && 
                     isValidUser(request.resource.data) &&
-                    (request.resource.data.role == resource.data.role || isAdmin());
+                    (isAdmin() || (resource != null && request.resource.data.role == resource.data.role));
       allow delete: if false;
 
       match /favorites/{favoriteId} {
