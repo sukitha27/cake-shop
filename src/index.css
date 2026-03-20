@@ -31,23 +31,23 @@
   --font-sans: "Lato", sans-serif;
 }
 
-/* ── Dark mode: swap slate to proper charcoal/grey tones ── */
+/* ── Dark mode: actual dark greys so dark:bg-slate-900 = dark background ── */
 .dark {
-  --color-slate-950: #f8f8f8;
-  --color-slate-900: #f1f1f1;
-  --color-slate-800: #e0e0e0;
-  --color-slate-700: #c4c4c4;
-  --color-slate-600: #a0a0a0;
-  --color-slate-500: #808080;
-  --color-slate-400: #606060;
-  --color-slate-300: #404040;
-  --color-slate-200: #2a2a2a;
-  --color-slate-100: #1f1f1f;
-  --color-slate-50:  #181818;
+  --color-slate-950: #080808;
+  --color-slate-900: #141414;  /* darkest bg — header, cards */
+  --color-slate-800: #1e1e1e;  /* dark bg — inputs, drawers */
+  --color-slate-700: #2a2a2a;  /* borders, dividers */
+  --color-slate-600: #3d3d3d;  /* subtle borders */
+  --color-slate-500: #6b6b6b;  /* muted text */
+  --color-slate-400: #909090;  /* placeholder / secondary text */
+  --color-slate-300: #b8b8b8;  /* light muted text */
+  --color-slate-200: #d4d4d4;  /* light borders */
+  --color-slate-100: #ebebeb;  /* near-white text */
+  --color-slate-50:  #f5f5f5;  /* lightest text */
 
-  --color-background-dark: #111111;
-  --color-soft-mint: #1f1f1f;
-  --color-accent: #f1f1f1;
+  --color-background-dark: #0d0d0d;
+  --color-soft-mint: #1e1e1e;
+  --color-accent: #f0f0f0;     /* light text on dark bg */
 }
 
 body {
