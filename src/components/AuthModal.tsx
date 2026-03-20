@@ -71,7 +71,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               Welcome Back
             </h2>
             <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm font-medium">
-              Sign in to Magnolia Bakery
+              Sign in to Magnolia Bakers
             </p>
           </div>
 

@@ -96,7 +96,7 @@ export function ProductDetails({ product, user, onBack, onAddToCart, isAdded, fo
               )}
             </div>
             <p className="text-lg text-slate-600 dark:text-slate-300 leading-relaxed mb-8">
-              {product.description || 'A delicious treat from Magnolia Bakery.'}
+              {product.description || 'A delicious treat from Magnolia Bakers.'}
             </p>
           </div>
 

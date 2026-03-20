@@ -890,14 +890,19 @@ function MainApp() {
               {/* Left Group: Logo */}
               <div className="flex items-center flex-1">
                 <div 
-                  className="flex items-center gap-2 cursor-pointer group"
+                  className="flex items-center gap-3 cursor-pointer group"
                   onClick={() => scrollToSection('top')}
                 >
-                  <div className="bg-primary/10 p-1.5 rounded-lg group-hover:bg-primary/20 transition-colors">
-                    <Cake className="w-6 h-6 sm:w-7 sm:h-7 text-primary" />
+                  <div className="relative">
+                    <img 
+                      src="https://res.cloudinary.com/dilixdvlj/image/upload/f_auto,q_auto/Pink_and_Cream_Modern_Cute_Cake_and_Bakery_Logo_el0ocr" 
+                      alt="Magnolia Bakers Logo" 
+                      className="w-10 h-10 sm:w-12 sm:h-12 object-contain rounded-full border-2 border-primary/20 group-hover:border-primary/40 transition-all"
+                      referrerPolicy="no-referrer"
+                    />
                   </div>
                   <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white uppercase hidden md:block font-display">
-                    Magnolia Bakery
+                    Magnolia Bakers
                   </h1>
                 </div>
               </div>
@@ -1392,7 +1397,7 @@ function MainApp() {
         <section id="order" className="py-24 px-6 lg:px-20 max-w-[1440px] mx-auto text-center">
           <h2 className="text-5xl lg:text-7xl font-display text-slate-900 dark:text-white mb-6">Delivery and Pick Up Options</h2>
           <p className="max-w-3xl mx-auto text-slate-600 dark:text-slate-300 text-lg mb-6 leading-relaxed">
-            We make it easy for you to get Magnolia Bakery's best, wherever you are. Order now for nationwide shipping, place an order to pickup at your local shop, or get in touch with our team to arrange custom catering for your next event.
+            We make it easy for you to get Magnolia Bakers' best, wherever you are. Order now for nationwide shipping, place an order to pickup at your local shop, or get in touch with our team to arrange custom catering for your next event.
           </p>
           <div className="flex justify-end mb-12">
             <a href="#" className="text-sm font-bold tracking-[0.2em] border-b-2 border-slate-900 dark:border-white pb-1 hover:opacity-70 transition-opacity">LEARN MORE</a>
@@ -1521,7 +1526,7 @@ function MainApp() {
               Catering, Gifting &<br/>Events
             </h2>
             <p className="text-[#5C2A35] dark:text-[#FFD1D6] text-lg max-w-md mb-10 leading-relaxed font-medium">
-              Our catering, gifting and events team is ready to fill your event or celebration with a custom selection of Magnolia Bakery's best creations. No occasion is too large—or too small!
+              Our catering, gifting and events team is ready to fill your event or celebration with a custom selection of Magnolia Bakers' best creations. No occasion is too large—or too small!
             </p>
             <button className="bg-[#5C2A35] hover:bg-[#4A222A] dark:bg-[#FFD1D6] dark:hover:bg-white dark:text-[#5C2A35] text-white font-bold tracking-wider px-10 py-4 rounded-full transition-colors">
               GET STARTED
@@ -1588,16 +1593,20 @@ function MainApp() {
       <footer id="locations" className="bg-[#B8E2D1] text-slate-900 py-16 px-6 lg:px-20 pb-[calc(4rem+env(safe-area-inset-bottom))]">
         <div className="max-w-[1440px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
           <div className="flex flex-col gap-4">
-            {/* Stylized Logo */}
+            {/* New Logo */}
             <div className="mb-8">
-              <svg width="60" height="60" viewBox="0 0 100 100" className="text-slate-900">
-                <path d="M20,80 Q20,20 50,20 Q80,20 80,80 M35,80 Q35,40 50,40 Q65,40 65,80 M50,20 Q50,80 50,80" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round"/>
-                <circle cx="20" cy="80" r="4" fill="currentColor"/>
-                <circle cx="80" cy="80" r="4" fill="currentColor"/>
-                <circle cx="35" cy="80" r="3" fill="currentColor"/>
-                <circle cx="65" cy="80" r="3" fill="currentColor"/>
-                <path d="M40,30 Q50,10 60,30" fill="none" stroke="currentColor" strokeWidth="2"/>
-              </svg>
+              <div 
+                className="flex items-center gap-3 cursor-pointer group"
+                onClick={() => scrollToSection('top')}
+              >
+                <img 
+                  src="https://res.cloudinary.com/dilixdvlj/image/upload/f_auto,q_auto/Pink_and_Cream_Modern_Cute_Cake_and_Bakery_Logo_el0ocr" 
+                  alt="Magnolia Bakers Logo" 
+                  className="w-16 h-16 object-contain rounded-full border-2 border-slate-900/20 group-hover:border-slate-900/40 transition-all"
+                  referrerPolicy="no-referrer"
+                />
+                <span className="text-xl font-black tracking-tighter uppercase font-display">Magnolia Bakers</span>
+              </div>
             </div>
             <ul className="space-y-3 text-xs font-bold tracking-wider uppercase">
               <li><a className="hover:opacity-70 transition-opacity" href="#">Careers</a></li>

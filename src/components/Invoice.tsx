@@ -208,7 +208,7 @@ export function Invoice({ order, onClose, formatPrice }: InvoiceProps) {
                     <ShoppingBag className="text-slate-900" size={24} />
                   </div>
                   <div>
-                    <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter uppercase">Magnolia Bakery</h1>
+                    <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter uppercase">Magnolia Bakers</h1>
                     <p className="text-xs font-bold text-primary uppercase tracking-[0.2em]">Premium Confections</p>
                   </div>
                 </div>
@@ -310,7 +310,7 @@ export function Invoice({ order, onClose, formatPrice }: InvoiceProps) {
                   <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Terms & Conditions</h4>
                   <p className="text-[10px] text-slate-400 leading-relaxed">
                     All sales are final. Please inspect your order upon delivery. 
-                    Magnolia Bakery is not responsible for damage after delivery. 
+                    Magnolia Bakers is not responsible for damage after delivery. 
                     For wholesale inquiries, contact wholesale@magnoliabakery.com.
                   </p>
                 </div>
