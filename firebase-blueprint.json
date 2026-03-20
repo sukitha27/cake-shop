@@ -156,6 +156,32 @@
         "userId": {
           "type": "string",
           "description": "The ID of the user who placed the order."
+        },
+        "shippingInfo": {
+          "type": "object",
+          "properties": {
+            "firstName": { "type": "string" },
+            "lastName": { "type": "string" },
+            "address": { "type": "string" },
+            "city": { "type": "string" },
+            "state": { "type": "string" },
+            "zip": { "type": "string" }
+          },
+          "required": ["firstName", "lastName", "address", "city", "state", "zip"],
+          "description": "The shipping information for the order."
+        },
+        "trackingNumber": {
+          "type": "string",
+          "description": "The tracking number for the shipment."
+        },
+        "carrier": {
+          "type": "string",
+          "description": "The shipping carrier (e.g., FedEx, UPS, USPS)."
+        },
+        "trackingLink": {
+          "type": "string",
+          "format": "uri",
+          "description": "A direct link to track the shipment."
         }
       },
       "required": ["items", "total", "status", "createdAt", "customerEmail", "userId"]

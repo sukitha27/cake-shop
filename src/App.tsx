@@ -885,24 +885,33 @@ function MainApp() {
           transition={{ duration: 0.3 }}
           className="relative flex min-h-screen w-full flex-col overflow-x-hidden"
         >
-          <header className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[98%] sm:w-[95%] max-w-[1200px]">
-            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/40 dark:border-slate-700 shadow-lg rounded-full px-2 sm:px-4 lg:px-6 py-2 sm:py-3 flex items-center justify-between">
-              <div className="flex items-center gap-2 sm:gap-6 lg:gap-10 shrink-0">
+          <header className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[98%] sm:w-[95%] max-w-[1300px]">
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/40 dark:border-slate-700 shadow-lg rounded-full px-4 sm:px-6 lg:px-8 py-2 sm:py-2.5 flex items-center justify-between">
+              {/* Left Group: Logo */}
+              <div className="flex items-center flex-1">
                 <div 
-                  className="flex items-center gap-2 cursor-pointer"
+                  className="flex items-center gap-2 cursor-pointer group"
                   onClick={() => scrollToSection('top')}
                 >
-                  <Cake className="w-8 h-8 text-primary" />
-                  <h1 className="text-xl font-black tracking-tighter text-slate-900 dark:text-white uppercase hidden md:block">Magnolia Bakery</h1>
+                  <div className="bg-primary/10 p-1.5 rounded-lg group-hover:bg-primary/20 transition-colors">
+                    <Cake className="w-6 h-6 sm:w-7 sm:h-7 text-primary" />
+                  </div>
+                  <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white uppercase hidden md:block font-display">
+                    Magnolia Bakery
+                  </h1>
                 </div>
-                <nav className="hidden lg:flex items-center gap-2 bg-slate-100/50 dark:bg-slate-800/50 p-1 rounded-full border border-slate-200/50 dark:border-slate-700/50">
-                  <button onClick={() => scrollToSection('order')} className="text-sm font-bold hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm px-4 py-2 rounded-full transition-all">Order</button>
-                  <button onClick={() => scrollToSection('products')} className="text-sm font-bold hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm px-4 py-2 rounded-full transition-all">Products</button>
-                  <button onClick={() => scrollToSection('locations')} className="text-sm font-bold hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm px-4 py-2 rounded-full transition-all">Locations</button>
-                  <button onClick={() => scrollToSection('about')} className="text-sm font-bold hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm px-4 py-2 rounded-full transition-all">About Us</button>
-                </nav>
               </div>
-              <div className="flex items-center gap-1 sm:gap-2 lg:gap-4">
+
+              {/* Center Group: Navigation */}
+              <nav className="hidden lg:flex items-center gap-1 bg-slate-100/50 dark:bg-slate-800/50 p-1 rounded-full border border-slate-200/50 dark:border-slate-700/50 mx-4">
+                <button onClick={() => scrollToSection('order')} className="text-sm font-bold hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm px-4 py-1.5 rounded-full transition-all">Order</button>
+                <button onClick={() => scrollToSection('products')} className="text-sm font-bold hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm px-4 py-1.5 rounded-full transition-all">Products</button>
+                <button onClick={() => scrollToSection('locations')} className="text-sm font-bold hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm px-4 py-1.5 rounded-full transition-all">Locations</button>
+                <button onClick={() => scrollToSection('about')} className="text-sm font-bold hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm px-4 py-1.5 rounded-full transition-all">About Us</button>
+              </nav>
+
+              {/* Right Group: Actions */}
+              <div className="flex items-center justify-end gap-2 sm:gap-3 lg:gap-4 flex-1">
                 {/* Currency Toggle */}
                 <button
                   onClick={() => setCurrency(currency === 'LKR' ? 'USD' : 'LKR')}
@@ -931,74 +940,82 @@ function MainApp() {
                   )}
                 </button>
 
-                <div className="hidden xl:flex items-center bg-slate-100 dark:bg-slate-800 rounded-full px-4 py-2 border border-slate-200/50 dark:border-slate-700/50">
+                <div className="hidden xl:flex items-center bg-slate-100 dark:bg-slate-800 rounded-full px-4 py-1.5 border border-slate-200/50 dark:border-slate-700/50">
                   <Search className="w-4 h-4 text-slate-500 mr-2" />
-                  <input className="bg-transparent border-none focus:outline-none focus:ring-0 text-sm w-32 placeholder:text-slate-500" placeholder="Search" type="text" />
+                  <input className="bg-transparent border-none focus:outline-none focus:ring-0 text-sm w-24 lg:w-32 placeholder:text-slate-500" placeholder="Search" type="text" />
                 </div>
-                <div className="flex items-center gap-1 lg:gap-2">
+                <div className="flex items-center gap-1 sm:gap-2 lg:gap-3">
                   {!isAuthReady ? (
                     <div className="w-8 h-8 flex items-center justify-center">
                       <Loader2 className="w-5 h-5 animate-spin text-primary" />
                     </div>
                   ) : user ? (
-                    <div className="hidden lg:flex items-center gap-1 lg:gap-2">
+                    <div className="flex items-center gap-1 sm:gap-2 lg:gap-3">
                       <button 
                         onClick={() => setCurrentView('favorites')}
-                        className={`p-1.5 sm:p-2 rounded-full transition-colors ${currentView === 'favorites' ? 'bg-primary text-slate-900 shadow-sm' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                        className={`p-2 rounded-full transition-all duration-200 ${currentView === 'favorites' ? 'bg-primary text-slate-900 shadow-md scale-110' : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'}`}
                         title="Favorites"
                         aria-label="View Favorites"
                       >
-                        <Heart className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
+                        <Heart className="w-5 h-5" aria-hidden="true" />
                       </button>
                       <button 
                         onClick={() => setCurrentView('orders')}
-                        className={`p-1.5 sm:p-2 rounded-full transition-colors ${currentView === 'orders' ? 'bg-primary text-slate-900 shadow-sm' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                        className={`p-2 rounded-full transition-all duration-200 ${currentView === 'orders' ? 'bg-primary text-slate-900 shadow-md scale-110' : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'}`}
                         title="Order History"
                         aria-label="View Order History"
                       >
-                        <FileText className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
+                        <FileText className="w-5 h-5" aria-hidden="true" />
                       </button>
                       {isAdminUser && (
                         <button 
                           onClick={() => setCurrentView('admin')}
-                          className={`p-1.5 sm:p-2 rounded-full transition-colors ${currentView === 'admin' ? 'bg-primary text-slate-900 shadow-sm' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                          className={`p-2 rounded-full transition-all duration-200 ${currentView === 'admin' ? 'bg-primary text-slate-900 shadow-md scale-110' : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'}`}
                           title="Admin Dashboard"
                           aria-label="View Admin Dashboard"
                         >
-                          <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
+                          <ShieldCheck className="w-5 h-5" aria-hidden="true" />
                         </button>
                       )}
                       <button 
                         onClick={() => setCurrentView('account')}
-                        className={`p-1.5 sm:p-2 rounded-full transition-colors ${currentView === 'account' ? 'bg-primary text-slate-900 shadow-sm' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                        className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-200 overflow-hidden border-2 ${currentView === 'account' ? 'bg-primary border-primary text-slate-900 shadow-md scale-110' : 'hover:bg-slate-100 dark:hover:bg-slate-800 border-transparent text-slate-600 dark:text-slate-400'}`}
                         title="My Account"
                         aria-label="View My Account"
                       >
                         {user.photoURL ? (
-                          <img src={user.photoURL} alt="User" className="w-5 h-5 sm:w-6 sm:h-6 rounded-full" referrerPolicy="no-referrer" />
-                        ) : (
-                          <UserIcon className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
-                        )}
+                          <img 
+                            src={user.photoURL} 
+                            alt="User" 
+                            className="w-full h-full object-cover" 
+                            referrerPolicy="no-referrer"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                              (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                            }}
+                          />
+                        ) : null}
+                        <UserIcon className={`w-5 h-5 ${user.photoURL ? 'hidden' : ''}`} aria-hidden="true" />
                       </button>
                     </div>
                   ) : (
                     <button 
                       onClick={handleLogin}
-                      className="p-1.5 sm:p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+                      className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200 text-slate-600 dark:text-slate-400"
                       title="Log in"
                       aria-label="Log in"
                     >
-                      <UserIcon className="w-4 h-4 sm:w-[22px] sm:h-[22px]" aria-hidden="true" />
+                      <UserIcon className="w-6 h-6" aria-hidden="true" />
                     </button>
                   )}
                   <button 
                     onClick={() => setIsCartOpen(true)}
-                    className="p-1.5 sm:p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors relative"
+                    className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200 relative text-slate-600 dark:text-slate-400"
                     aria-label={`Open cart, ${cartCount} items`}
                   >
-                    <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
+                    <ShoppingCart className="w-5 h-5" aria-hidden="true" />
                     {cartCount > 0 && (
-                      <span className="absolute top-0 right-0 bg-primary text-[10px] font-bold px-1.5 rounded-full text-slate-900 animate-in zoom-in duration-300 shadow-sm">
+                      <span className="absolute top-1 right-1 bg-primary text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full text-slate-900 shadow-sm">
                         {cartCount}
                       </span>
                     )}

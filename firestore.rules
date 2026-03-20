@@ -94,14 +94,25 @@ service cloud.firestore {
              (items.size() == 0 || isValidOrderItem(items[0]));
     }
 
+    function isValidShippingInfo(info) {
+      return info.keys().hasAll(['firstName', 'lastName', 'address', 'city', 'state', 'zip']) &&
+             info.firstName is string && info.lastName is string &&
+             info.address is string && info.city is string &&
+             info.state is string && info.zip is string;
+    }
+
     function isValidOrder(data) {
-      return hasOnlyAllowedFields(['items', 'total', 'status', 'createdAt', 'customerEmail', 'userId']) &&
+      return hasOnlyAllowedFields(['items', 'total', 'status', 'createdAt', 'customerEmail', 'userId', 'shippingInfo', 'trackingNumber', 'carrier', 'trackingLink']) &&
              isValidOrderItems(data.items) &&
              data.total is number && data.total >= 0 &&
              data.status is string && data.status in ['processing', 'shipped', 'out_for_delivery', 'delivered', 'cancelled'] &&
              (data.createdAt is timestamp || data.createdAt is string) &&
              (!('customerEmail' in data) || data.customerEmail is string) &&
-             (!('userId' in data) || data.userId is string);
+             (!('userId' in data) || data.userId is string) &&
+             (!('shippingInfo' in data) || isValidShippingInfo(data.shippingInfo)) &&
+             (!('trackingNumber' in data) || (data.trackingNumber is string && data.trackingNumber.size() <= 100)) &&
+             (!('carrier' in data) || (data.carrier is string && data.carrier.size() <= 100)) &&
+             (!('trackingLink' in data) || isValidUrl(data.trackingLink));
     }
 
     function isValidAddress(address) {

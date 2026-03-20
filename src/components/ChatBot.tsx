@@ -34,10 +34,11 @@ export function ChatBot({ products, onViewProduct, formatPrice }: ChatBotProps) 
   const [unreadCount, setUnreadCount] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const chatRef = useRef<any>(null);
+  const isInitialized = useRef(false);
 
   // Initialize chat session
   useEffect(() => {
-    if (!products.length) return;
+    if (!products.length || isInitialized.current) return;
 
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
@@ -67,10 +68,11 @@ export function ChatBot({ products, onViewProduct, formatPrice }: ChatBotProps) 
         model: "gemini-3-flash-preview",
         config: { systemInstruction }
       });
+      isInitialized.current = true;
     } catch (error) {
       console.error("Failed to initialize Gemini chat:", error);
     }
-  }, [products]);
+  }, [products, formatPrice]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -152,10 +154,19 @@ export function ChatBot({ products, onViewProduct, formatPrice }: ChatBotProps) 
       // Extract products mentioned in the response
       const mentionedProducts = products.filter(p => aiContent.includes(`[${p.name}]`));
 
+      // Clean up product mentions by removing brackets only when they surround a product name
+      let cleanedContent = aiContent;
+      products.forEach(p => {
+        const bracketedName = `[${p.name}]`;
+        if (cleanedContent.includes(bracketedName)) {
+          cleanedContent = cleanedContent.split(bracketedName).join(p.name);
+        }
+      });
+
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: aiContent.replace(/\[|\]/g, ''), // Remove brackets for display
+        content: cleanedContent,
         timestamp: new Date(),
         products: mentionedProducts.length > 0 ? mentionedProducts : undefined
       };
@@ -236,7 +247,9 @@ export function ChatBot({ products, onViewProduct, formatPrice }: ChatBotProps) 
                         ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900' 
                         : 'bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300'
                     }`}>
-                      <Markdown>{msg.content}</Markdown>
+                      <div className="markdown-body prose-sm max-w-none">
+                        <Markdown>{msg.content}</Markdown>
+                      </div>
                     </div>
                     
                     {msg.products && (

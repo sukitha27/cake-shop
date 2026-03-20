@@ -184,6 +184,31 @@ export function OrderTracker({ order, isOpen, onClose }: OrderTrackerProps) {
             
             <div className="p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
               <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">Shipping Updates</p>
+              
+              {order.trackingNumber && (
+                <div className="mb-4 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Carrier</span>
+                    <span className="text-sm font-bold text-slate-900 dark:text-white">{order.carrier || 'Standard Shipping'}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tracking #</span>
+                    <span className="text-sm font-mono font-bold text-primary">{order.trackingNumber}</span>
+                  </div>
+                  {order.trackingLink && (
+                    <a 
+                      href={order.trackingLink} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="mt-2 w-full py-2 bg-primary text-slate-900 text-center font-bold rounded-lg hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 text-sm"
+                    >
+                      <Truck className="w-4 h-4" />
+                      Track on Carrier Site
+                    </a>
+                  )}
+                </div>
+              )}
+
               <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex gap-3 items-start">
                 <Info className="w-5 h-5 text-primary shrink-0" />
                 <p className="text-sm text-slate-600 dark:text-slate-400">

@@ -520,30 +520,38 @@ export function AdminDashboard({ onBack, formatPrice }: AdminDashboardProps) {
                             </td>
                             <td className="p-4 text-sm font-bold text-slate-900 dark:text-white">{formatPrice(order.total)}</td>
                              <td className="p-4">
-                              <div className="flex items-center gap-2">
-                                <select 
-                                  value={order.status}
-                                  disabled={updatingOrderId === order.id}
-                                  onChange={(e) => handleStatusChange(order.ref, e.target.value, order)}
-                                  className={`text-sm font-bold px-3 py-1.5 rounded-full border-2 outline-none cursor-pointer transition-all ${
-                                    updatingOrderId === order.id ? 'opacity-50 cursor-wait' : ''
-                                  } ${
-                                    order.status === 'delivered' ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800' :
-                                    order.status === 'processing' ? 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800' :
-                                    order.status === 'shipped' ? 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800' :
-                                    order.status === 'out_for_delivery' ? 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800' :
-                                    order.status === 'cancelled' ? 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800' :
-                                    'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700'
-                                  }`}
-                                >
-                                  <option value="processing">Processing</option>
-                                  <option value="shipped">Shipped</option>
-                                  <option value="out_for_delivery">Out for Delivery</option>
-                                  <option value="delivered">Delivered</option>
-                                  <option value="cancelled">Cancelled</option>
-                                </select>
-                                {updatingOrderId === order.id && (
-                                  <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                              <div className="flex flex-col gap-1">
+                                <div className="flex items-center gap-2">
+                                  <select 
+                                    value={order.status}
+                                    disabled={updatingOrderId === order.id}
+                                    onChange={(e) => handleStatusChange(order.ref, e.target.value, order)}
+                                    className={`text-sm font-bold px-3 py-1.5 rounded-full border-2 outline-none cursor-pointer transition-all ${
+                                      updatingOrderId === order.id ? 'opacity-50 cursor-wait' : ''
+                                    } ${
+                                      order.status === 'delivered' ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800' :
+                                      order.status === 'processing' ? 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800' :
+                                      order.status === 'shipped' ? 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800' :
+                                      order.status === 'out_for_delivery' ? 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800' :
+                                      order.status === 'cancelled' ? 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800' :
+                                      'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700'
+                                    }`}
+                                  >
+                                    <option value="processing">Processing</option>
+                                    <option value="shipped">Shipped</option>
+                                    <option value="out_for_delivery">Out for Delivery</option>
+                                    <option value="delivered">Delivered</option>
+                                    <option value="cancelled">Cancelled</option>
+                                  </select>
+                                  {updatingOrderId === order.id && (
+                                    <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                                  )}
+                                </div>
+                                {order.trackingNumber && (
+                                  <div className="flex items-center gap-1 text-[10px] font-bold text-slate-500 uppercase tracking-tight">
+                                    <Truck className="w-3 h-3" />
+                                    {order.carrier}: {order.trackingNumber}
+                                  </div>
                                 )}
                               </div>
                             </td>
@@ -799,24 +807,50 @@ export function AdminDashboard({ onBack, formatPrice }: AdminDashboardProps) {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-              <div>
-                <h4 className="font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-                  <UserIcon className="w-4 h-4 text-primary" />
-                  Customer Info
-                </h4>
-                <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-1"><span className="font-medium text-slate-900 dark:text-slate-300">Email:</span> {selectedOrder.customerEmail}</p>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-1"><span className="font-medium text-slate-900 dark:text-slate-300">User ID:</span> <span className="font-mono">{selectedOrder.userId}</span></p>
-                  <p className="text-sm text-slate-600 dark:text-slate-400"><span className="font-medium text-slate-900 dark:text-slate-300">Date:</span> {new Date(selectedOrder.createdAt).toLocaleString()}</p>
+              <div className="space-y-6">
+                <div>
+                  <h4 className="font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                    <UserIcon className="w-4 h-4 text-primary" />
+                    Customer Info
+                  </h4>
+                  <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">
+                      <span className="font-medium text-slate-900 dark:text-slate-300">Name:</span> {selectedOrder.shippingInfo ? `${selectedOrder.shippingInfo.firstName} ${selectedOrder.shippingInfo.lastName}` : 'N/A'}
+                    </p>
+                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">
+                      <span className="font-medium text-slate-900 dark:text-slate-300">Email:</span> {selectedOrder.customerEmail}
+                    </p>
+                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">
+                      <span className="font-medium text-slate-900 dark:text-slate-300">User ID:</span> <span className="font-mono">{selectedOrder.userId}</span>
+                    </p>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                      <span className="font-medium text-slate-900 dark:text-slate-300">Date:</span> {new Date(selectedOrder.createdAt).toLocaleString()}
+                    </p>
+                  </div>
                 </div>
+
+                {selectedOrder.shippingInfo && (
+                  <div>
+                    <h4 className="font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                      <Truck className="w-4 h-4 text-primary" />
+                      Shipping Address
+                    </h4>
+                    <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+                      <p className="text-sm text-slate-600 dark:text-slate-400">{selectedOrder.shippingInfo.address}</p>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">
+                        {selectedOrder.shippingInfo.city}, {selectedOrder.shippingInfo.state} {selectedOrder.shippingInfo.zip}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
               
               <div>
                 <h4 className="font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                   <Truck className="w-4 h-4 text-primary" />
-                  Order Status
+                  Order Status & Tracking
                 </h4>
-                <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+                <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800 space-y-4">
                   <div className="flex items-center gap-4">
                     <select 
                       value={selectedOrder.status}
@@ -839,6 +873,62 @@ export function AdminDashboard({ onBack, formatPrice }: AdminDashboardProps) {
                       <option value="delivered">Delivered</option>
                       <option value="cancelled">Cancelled</option>
                     </select>
+                  </div>
+
+                  <div className="pt-4 border-t border-slate-200 dark:border-slate-700 space-y-3">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1">Carrier</label>
+                      <input 
+                        type="text" 
+                        placeholder="e.g. FedEx, UPS"
+                        value={selectedOrder.carrier || ''}
+                        onChange={(e) => setSelectedOrder({...selectedOrder, carrier: e.target.value})}
+                        className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1">Tracking Number</label>
+                      <input 
+                        type="text" 
+                        placeholder="Enter tracking number"
+                        value={selectedOrder.trackingNumber || ''}
+                        onChange={(e) => setSelectedOrder({...selectedOrder, trackingNumber: e.target.value})}
+                        className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1">Tracking Link</label>
+                      <input 
+                        type="url" 
+                        placeholder="https://..."
+                        value={selectedOrder.trackingLink || ''}
+                        onChange={(e) => setSelectedOrder({...selectedOrder, trackingLink: e.target.value})}
+                        className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                      />
+                    </div>
+                    <button 
+                      onClick={async () => {
+                        try {
+                          setUpdatingOrderId(selectedOrder.id);
+                          await updateDoc(selectedOrder.ref, {
+                            carrier: selectedOrder.carrier || '',
+                            trackingNumber: selectedOrder.trackingNumber || '',
+                            trackingLink: selectedOrder.trackingLink || ''
+                          });
+                          addToast("Tracking information updated!", "success");
+                        } catch (error) {
+                          console.error("Error updating tracking info:", error);
+                          addToast("Failed to update tracking info", "error");
+                          handleFirestoreError(error, OperationType.UPDATE, selectedOrder.ref.path);
+                        } finally {
+                          setUpdatingOrderId(null);
+                        }
+                      }}
+                      disabled={updatingOrderId === selectedOrder.id}
+                      className="w-full py-2 bg-primary text-slate-900 font-bold rounded-xl hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
+                    >
+                      {updatingOrderId === selectedOrder.id ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Update Tracking Info'}
+                    </button>
                   </div>
                 </div>
               </div>
