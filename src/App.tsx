@@ -387,8 +387,7 @@ function MainApp() {
               email: currentUser.email || '',
               displayName: currentUser.displayName || '',
               phoneNumber: '',
-              addresses: [],
-              points: 0
+              addresses: []
             });
             setIsAdminUser(initialRole === 'admin');
           } else {
@@ -397,6 +396,7 @@ function MainApp() {
           }
         } catch (error) {
           console.error("Error ensuring user document exists:", error);
+          handleFirestoreError(error, OperationType.WRITE, `users/${currentUser.uid}`);
         }
       } else {
         setIsAdminUser(false);
@@ -941,7 +941,7 @@ function MainApp() {
                       <Loader2 className="w-5 h-5 animate-spin text-primary" />
                     </div>
                   ) : user ? (
-                    <div className="flex items-center gap-1 lg:gap-2">
+                    <div className="hidden lg:flex items-center gap-1 lg:gap-2">
                       <button 
                         onClick={() => setCurrentView('favorites')}
                         className={`p-1.5 sm:p-2 rounded-full transition-colors ${currentView === 'favorites' ? 'bg-primary text-slate-900 shadow-sm' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
@@ -1046,7 +1046,7 @@ function MainApp() {
                     <button onClick={() => scrollToSection('products')} className="text-lg font-semibold hover:text-primary transition-colors text-left">Products</button>
                     <button onClick={() => scrollToSection('locations')} className="text-lg font-semibold hover:text-primary transition-colors text-left">Hours & Locations</button>
                     <button onClick={() => scrollToSection('about')} className="text-lg font-semibold hover:text-primary transition-colors text-left">About Us</button>
-                    {user && (
+                    {user ? (
                       <>
                         <div className="h-px bg-slate-100 dark:bg-slate-800 my-2" />
                         <button 
@@ -1068,6 +1068,42 @@ function MainApp() {
                         >
                           <Heart className="w-5 h-5" />
                           My Favorites
+                        </button>
+                        <button 
+                          onClick={() => {
+                            setCurrentView('orders');
+                            setIsMobileMenuOpen(false);
+                          }} 
+                          className="text-lg font-semibold hover:text-primary transition-colors text-left flex items-center gap-2"
+                        >
+                          <FileText className="w-5 h-5" />
+                          Order History
+                        </button>
+                        {isAdminUser && (
+                          <button 
+                            onClick={() => {
+                              setCurrentView('admin');
+                              setIsMobileMenuOpen(false);
+                            }} 
+                            className="text-lg font-semibold hover:text-primary transition-colors text-left flex items-center gap-2"
+                          >
+                            <ShieldCheck className="w-5 h-5" />
+                            Admin Dashboard
+                          </button>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <div className="h-px bg-slate-100 dark:bg-slate-800 my-2" />
+                        <button 
+                          onClick={() => {
+                            handleLogin();
+                            setIsMobileMenuOpen(false);
+                          }} 
+                          className="text-lg font-semibold hover:text-primary transition-colors text-left flex items-center gap-2"
+                        >
+                          <UserIcon className="w-5 h-5" />
+                          Log In
                         </button>
                       </>
                     )}

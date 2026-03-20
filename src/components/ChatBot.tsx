@@ -175,14 +175,14 @@ export function ChatBot({ products, onViewProduct, formatPrice }: ChatBotProps) 
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-[60] print:hidden">
+    <div className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] right-4 sm:bottom-6 sm:right-6 z-[60] print:hidden">
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="absolute bottom-20 right-0 w-[calc(100vw-3rem)] sm:w-[380px] h-[70vh] sm:h-[550px] max-h-[600px] bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col"
+            className="absolute bottom-20 right-0 w-[calc(100vw-2rem)] sm:w-[380px] h-[70vh] sm:h-[550px] max-h-[600px] bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col"
           >
             {/* Header */}
             <div className="p-6 bg-primary flex items-center justify-between">
