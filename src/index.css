@@ -1,39 +1,73 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Lato:wght@300;400;700&display=swap');
 @import "tailwindcss";
 
-/* ✅ Tell Tailwind v4 to use .dark CLASS strategy (not OS media query) */
+/* Tell Tailwind v4 to use .dark CLASS on <html> for dark: utilities */
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --color-primary: #F7C6C7; /* Pastel pink */
-  --color-secondary: #FFFFFF; /* White */
-  --color-accent: #6B3E26; /* Chocolate brown */
-  
+  --color-primary: #F7C6C7;         /* Pastel pink — brand accent */
+  --color-secondary: #FFFFFF;
+  --color-accent: #6B3E26;          /* Chocolate brown — light mode text */
+
   --color-background-light: #FFFFFF;
-  --color-background-dark: #4A2B1A;
-  
-  --color-soft-mint: #FFFFFF; /* White */
-  
-  /* Override slate to be warm browns/creams */
+  --color-background-dark: #111111;
+
+  --color-soft-mint: #FFFFFF;
+
+  /* ── Light mode slate = warm browns ── */
+  --color-slate-950: #2A1A0E;
   --color-slate-900: #4A2B1A;
   --color-slate-800: #5C3621;
-  --color-slate-700: #6B3E26; /* Accent */
+  --color-slate-700: #6B3E26;
   --color-slate-600: #8A5A44;
   --color-slate-500: #A4755D;
   --color-slate-400: #C0957D;
   --color-slate-300: #D8B4A0;
   --color-slate-200: #EED4C5;
   --color-slate-100: #F9EBE2;
-  --color-slate-50: #FFFFFF; /* White */
+  --color-slate-50:  #FFFAF7;
 
   --font-display: "Playfair Display", serif;
   --font-sans: "Lato", sans-serif;
 }
 
+/* ── Dark mode: swap slate to proper charcoal/grey tones ── */
+.dark {
+  --color-slate-950: #f8f8f8;
+  --color-slate-900: #f1f1f1;
+  --color-slate-800: #e0e0e0;
+  --color-slate-700: #c4c4c4;
+  --color-slate-600: #a0a0a0;
+  --color-slate-500: #808080;
+  --color-slate-400: #606060;
+  --color-slate-300: #404040;
+  --color-slate-200: #2a2a2a;
+  --color-slate-100: #1f1f1f;
+  --color-slate-50:  #181818;
+
+  --color-background-dark: #111111;
+  --color-soft-mint: #1f1f1f;
+  --color-accent: #f1f1f1;
+}
+
 body {
-  @apply bg-background-light dark:bg-background-dark font-sans text-accent dark:text-slate-100;
+  @apply bg-white dark:bg-[#111111] font-sans text-[#6B3E26] dark:text-[#f1f1f1];
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 h1, h2, h3, h4, h5, h6 {
   @apply font-display;
+}
+
+/* Smooth transitions on common elements */
+*, *::before, *::after {
+  transition-property: background-color, border-color;
+  transition-duration: 0.2s;
+  transition-timing-function: ease;
+}
+
+/* Don't interfere with animation transitions */
+[class*="animate-"],
+[class*="motion-"] {
+  transition-property: opacity, transform;
 }
