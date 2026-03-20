@@ -1,6 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Lato:wght@300;400;700&display=swap');
 @import "tailwindcss";
 
+/* ✅ Tell Tailwind v4 to use .dark CLASS strategy (not OS media query) */
+@custom-variant dark (&:is(.dark *));
+
 @theme {
   --color-primary: #F7C6C7; /* Pastel pink */
   --color-secondary: #FFFFFF; /* White */
