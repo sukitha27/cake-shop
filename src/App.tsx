@@ -799,7 +799,7 @@ function MainApp() {
             Out of Stock
           </div>
         )}
-        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden lg:flex items-center justify-center">
           <button 
             onClick={(e) => {
               e.stopPropagation();
@@ -836,6 +836,25 @@ function MainApp() {
         ))}
       </div>
       <p className="font-bold text-primary text-center">{formatPrice(product.price)}</p>
+      
+      {/* Mobile Add to Cart Button */}
+      <button 
+        onClick={(e) => {
+          e.stopPropagation();
+          if (product.stockQuantity > 0) handleAddToCart(product, e);
+        }}
+        disabled={product.stockQuantity <= 0}
+        className={`mt-3 w-full py-2 rounded-full font-bold text-sm transition-all duration-300 lg:hidden ${
+          product.stockQuantity <= 0
+            ? 'bg-slate-200 text-slate-400 cursor-not-allowed dark:bg-slate-800 dark:text-slate-500'
+            : addedItems[product.name] 
+              ? 'bg-green-500 text-white' 
+              : 'bg-primary text-slate-900 hover:bg-primary/90'
+        }`}
+        aria-label={product.stockQuantity <= 0 ? `Out of stock` : `Add ${product.name} to cart`}
+      >
+        {product.stockQuantity <= 0 ? 'Out of Stock' : addedItems[product.name] ? 'Added!' : 'Add to Cart'}
+      </button>
     </motion.div>
   ));
 
@@ -1513,7 +1532,7 @@ function MainApp() {
         </AnimatePresence>
       </main>
 
-      <footer id="locations" className="bg-[#B8E2D1] text-slate-900 py-16 px-6 lg:px-20">
+      <footer id="locations" className="bg-[#B8E2D1] text-slate-900 py-16 px-6 lg:px-20 pb-[calc(4rem+env(safe-area-inset-bottom))]">
         <div className="max-w-[1440px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
           <div className="flex flex-col gap-4">
             {/* Stylized Logo */}

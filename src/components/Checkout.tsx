@@ -148,7 +148,7 @@ export function Checkout({ cartItems, onBack, onPlaceOrder, formatPrice }: Check
         </div>
       </header>
 
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto px-4 py-8 pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-8">
         <form onSubmit={handleSubmit} className="grid md:grid-cols-3 gap-8">
           
           {/* Form Sections */}

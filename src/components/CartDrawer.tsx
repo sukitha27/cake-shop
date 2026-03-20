@@ -151,7 +151,7 @@ export function CartDrawer({ isOpen, onClose, cartItems, onUpdateQuantity, onRem
 
         {/* Footer */}
         {items.length > 0 && (
-          <div className="p-6 border-t border-soft-mint dark:border-slate-800 bg-soft-mint/50 dark:bg-background-dark/50">
+          <div className="p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] border-t border-soft-mint dark:border-slate-800 bg-soft-mint/50 dark:bg-background-dark/50">
             <div className="flex items-center justify-between mb-6">
               <span className="text-lg font-bold text-slate-600 dark:text-slate-300">Subtotal</span>
               <span className="text-2xl font-black text-accent dark:text-white">

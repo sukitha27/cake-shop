@@ -34,7 +34,7 @@ export function ProductDetails({ product, user, onBack, onAddToCart, isAdded, fo
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="max-w-[1440px] mx-auto px-6 lg:px-20 py-12 pt-32"
+      className="max-w-[1440px] mx-auto px-6 lg:px-20 py-12 pt-32 pb-[calc(3rem+env(safe-area-inset-bottom))]"
     >
       <button 
         onClick={onBack}

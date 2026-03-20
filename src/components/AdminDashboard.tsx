@@ -371,7 +371,7 @@ export function AdminDashboard({ onBack, formatPrice }: AdminDashboardProps) {
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto px-4 py-8 pb-[calc(2rem+env(safe-area-inset-bottom))]">
         {errorMsg && (
           <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative animate-in slide-in-from-top duration-300" role="alert">
             <span className="block sm:inline">{errorMsg}</span>
