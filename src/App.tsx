@@ -18,6 +18,9 @@ import { FilterBar } from './components/FilterBar';
 import { useToast } from './components/Toast';
 import { useTheme } from './hooks/useTheme';
 import { ChatBot } from './components/ChatBot';
+import { Products } from './pages/Products';
+import { Locations } from './pages/Locations';
+import { AboutUs } from './pages/AboutUs';
 
 export interface Product {
   id?: string;
@@ -302,7 +305,8 @@ function MainApp() {
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
   const [orders, setOrders] = useState<any[]>([]);
   const [selectedInvoiceOrder, setSelectedInvoiceOrder] = useState<any | null>(null);
-  const [currentView, setCurrentView] = useState<'home' | 'orders' | 'favorites' | 'admin' | 'account'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'orders' | 'favorites' | 'admin' | 'account' | 'products' | 'locations' | 'about-us'>('home');
+  const [globalSearchQuery, setGlobalSearchQuery] = useState('');
   const currentViewRef = React.useRef(currentView);
   
   React.useEffect(() => {
@@ -910,9 +914,9 @@ function MainApp() {
               {/* Center Group: Navigation */}
               <nav className="hidden lg:flex items-center gap-1 bg-slate-100/50 dark:bg-slate-800/50 p-1 rounded-full border border-slate-200/50 dark:border-slate-700/50 mx-4">
                 <button onClick={() => scrollToSection('order')} className="text-sm font-bold hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm px-4 py-1.5 rounded-full transition-all">Order</button>
-                <button onClick={() => scrollToSection('products')} className="text-sm font-bold hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm px-4 py-1.5 rounded-full transition-all">Products</button>
-                <button onClick={() => scrollToSection('locations')} className="text-sm font-bold hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm px-4 py-1.5 rounded-full transition-all">Locations</button>
-                <button onClick={() => scrollToSection('about')} className="text-sm font-bold hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm px-4 py-1.5 rounded-full transition-all">About Us</button>
+                <button onClick={() => setCurrentView('products')} className={`text-sm font-bold hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm px-4 py-1.5 rounded-full transition-all ${currentView === 'products' ? 'bg-white dark:bg-slate-700 shadow-sm' : ''}`}>Products</button>
+                <button onClick={() => setCurrentView('locations')} className={`text-sm font-bold hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm px-4 py-1.5 rounded-full transition-all ${currentView === 'locations' ? 'bg-white dark:bg-slate-700 shadow-sm' : ''}`}>Locations</button>
+                <button onClick={() => setCurrentView('about-us')} className={`text-sm font-bold hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm px-4 py-1.5 rounded-full transition-all ${currentView === 'about-us' ? 'bg-white dark:bg-slate-700 shadow-sm' : ''}`}>About Us</button>
               </nav>
 
               {/* Right Group: Actions */}
@@ -947,7 +951,16 @@ function MainApp() {
 
                 <div className="hidden xl:flex items-center bg-slate-100 dark:bg-slate-800 rounded-full px-4 py-1.5 border border-slate-200/50 dark:border-slate-700/50">
                   <Search className="w-4 h-4 text-slate-500 mr-2" />
-                  <input className="bg-transparent border-none focus:outline-none focus:ring-0 text-sm w-24 lg:w-32 placeholder:text-slate-500" placeholder="Search" type="text" />
+                  <input 
+                    className="bg-transparent border-none focus:outline-none focus:ring-0 text-sm w-24 lg:w-32 placeholder:text-slate-500" 
+                    placeholder="Search products..." 
+                    type="text" 
+                    value={globalSearchQuery}
+                    onChange={(e) => {
+                      setGlobalSearchQuery(e.target.value);
+                      if (currentView !== 'products') setCurrentView('products');
+                    }}
+                  />
                 </div>
                 <div className="flex items-center gap-1 sm:gap-2 lg:gap-3">
                   {!isAuthReady ? (
@@ -1064,10 +1077,10 @@ function MainApp() {
                     </button>
                   </div>
                   <nav className="flex flex-col p-4 gap-4">
-                    <button onClick={() => scrollToSection('order')} className="text-lg font-semibold hover:text-primary transition-colors text-left">Order</button>
-                    <button onClick={() => scrollToSection('products')} className="text-lg font-semibold hover:text-primary transition-colors text-left">Products</button>
-                    <button onClick={() => scrollToSection('locations')} className="text-lg font-semibold hover:text-primary transition-colors text-left">Hours & Locations</button>
-                    <button onClick={() => scrollToSection('about')} className="text-lg font-semibold hover:text-primary transition-colors text-left">About Us</button>
+                    <button onClick={() => { scrollToSection('order'); setIsMobileMenuOpen(false); }} className="text-lg font-semibold hover:text-primary transition-colors text-left">Order</button>
+                    <button onClick={() => { setCurrentView('products'); setIsMobileMenuOpen(false); }} className={`text-lg font-semibold hover:text-primary transition-colors text-left ${currentView === 'products' ? 'text-primary' : ''}`}>Products</button>
+                    <button onClick={() => { setCurrentView('locations'); setIsMobileMenuOpen(false); }} className={`text-lg font-semibold hover:text-primary transition-colors text-left ${currentView === 'locations' ? 'text-primary' : ''}`}>Hours & Locations</button>
+                    <button onClick={() => { setCurrentView('about-us'); setIsMobileMenuOpen(false); }} className={`text-lg font-semibold hover:text-primary transition-colors text-left ${currentView === 'about-us' ? 'text-primary' : ''}`}>About Us</button>
                     {user ? (
                       <>
                         <div className="h-px bg-slate-100 dark:bg-slate-800 my-2" />
@@ -1272,6 +1285,47 @@ function MainApp() {
                 ))}
               </div>
             )}
+          </motion.div>
+        ) : currentView === 'products' ? (
+          <motion.div
+            key="products"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Products 
+              products={products}
+              onBack={() => setCurrentView('home')}
+              onAddToCart={handleAddToCart}
+              onToggleFavorite={toggleFavorite}
+              favorites={favorites}
+              formatPrice={formatPrice}
+              addedItems={addedItems}
+              onViewProduct={setViewingProduct}
+              searchQuery={globalSearchQuery}
+              setSearchQuery={setGlobalSearchQuery}
+            />
+          </motion.div>
+        ) : currentView === 'locations' ? (
+          <motion.div
+            key="locations"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Locations onBack={() => setCurrentView('home')} />
+          </motion.div>
+        ) : currentView === 'about-us' ? (
+          <motion.div
+            key="about-us"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <AboutUs onBack={() => setCurrentView('home')} />
           </motion.div>
         ) : (
           <motion.div
@@ -1597,7 +1651,10 @@ function MainApp() {
             <div className="mb-8">
               <div 
                 className="flex items-center gap-3 cursor-pointer group"
-                onClick={() => scrollToSection('top')}
+                onClick={() => {
+                  setCurrentView('home');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
               >
                 <img 
                   src="https://res.cloudinary.com/dilixdvlj/image/upload/f_auto,q_auto/Pink_and_Cream_Modern_Cute_Cake_and_Bakery_Logo_el0ocr" 
@@ -1609,6 +1666,9 @@ function MainApp() {
               </div>
             </div>
             <ul className="space-y-3 text-xs font-bold tracking-wider uppercase">
+              <li><button onClick={() => setCurrentView('products')} className="hover:opacity-70 transition-opacity text-left">Products</button></li>
+              <li><button onClick={() => setCurrentView('locations')} className="hover:opacity-70 transition-opacity text-left">Locations</button></li>
+              <li><button onClick={() => setCurrentView('about-us')} className="hover:opacity-70 transition-opacity text-left">About Us</button></li>
               <li><a className="hover:opacity-70 transition-opacity" href="#">Careers</a></li>
               <li><a className="hover:opacity-70 transition-opacity" href="#">Press</a></li>
               <li><a className="hover:opacity-70 transition-opacity" href="#">U.S. Franchising</a></li>

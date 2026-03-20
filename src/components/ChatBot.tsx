@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { MessageSquare, X, Send, Sparkles, ShoppingBag, ArrowRight, Loader2, Bot, User, Trash2 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 import Markdown from 'react-markdown';
-import { Product } from '../App';
+import { Product } from '../types';
 
 interface Message {
   id: string;

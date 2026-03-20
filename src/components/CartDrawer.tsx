@@ -1,17 +1,8 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, ShoppingBag, Trash2, Minus, Plus, Lock } from 'lucide-react';
-import { FALLBACK_IMAGE } from '../App';
-
-interface Product {
-  name: string;
-  category: string;
-  image: string;
-  alt: string;
-  price: number;
-  stockQuantity: number;
-  dietaryTags: string[];
-}
+import { FALLBACK_IMAGE } from '../constants';
+import { Product } from '../types';
 
 interface CartItem {
   product: Product;

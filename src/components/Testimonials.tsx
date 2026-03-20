@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { Star } from 'lucide-react';
-import { FALLBACK_IMAGE } from '../App';
+import { FALLBACK_IMAGE } from '../constants';
 
 const testimonials = [
   {

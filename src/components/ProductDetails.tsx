@@ -3,21 +3,8 @@ import { motion } from 'motion/react';
 import { ArrowLeft, Ban, Check, ShoppingBag } from 'lucide-react';
 import { ProductReviews } from './ProductReviews';
 import { User } from 'firebase/auth';
-import { FALLBACK_IMAGE } from '../App';
-
-interface Product {
-  id?: string;
-  name: string;
-  category: string;
-  image: string;
-  alt: string;
-  price: number;
-  stockQuantity: number;
-  description?: string;
-  ingredients?: string;
-  nutrition?: string;
-  dietaryTags?: string[];
-}
+import { FALLBACK_IMAGE } from '../constants';
+import { Product } from '../types';
 
 interface ProductDetailsProps {
   product: Product;

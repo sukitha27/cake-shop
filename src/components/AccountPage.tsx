@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { User, signOut } from 'firebase/auth';
 import { doc, getDoc, updateDoc, collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { db, auth } from '../firebase';
-import { User as UserIcon, MapPin, Phone, Package, LogOut, ChevronRight, Plus, Trash2, Check, X, ShoppingBag, Award } from 'lucide-react';
-import { handleFirestoreError, OperationType, Product } from '../App';
+import { User as UserIcon, MapPin, Phone, Package, LogOut, ChevronRight, Plus, Trash2, Check, X, ShoppingBag, Award, ShieldCheck } from 'lucide-react';
+import { handleFirestoreError, OperationType } from '../utils/firebaseUtils';
+import { Product, Order } from '../types';
 import { LoyaltyCard } from './LoyaltyCard';
 
 export interface Address {
@@ -27,24 +29,18 @@ interface UserProfile {
   points?: number;
 }
 
-interface Order {
-  id: string;
-  items: any[];
-  total: number;
-  status: string;
-  createdAt: string;
-}
-
 interface AccountPageProps {
   user: User;
   onBack: () => void;
-  onReorder: (items: any[]) => void;
+  onReorder: (order: Order) => void;
   products: Product[];
   onViewInvoice: (order: any) => void;
   formatPrice: (price: number) => string;
+  isAdminUser?: boolean;
 }
 
-export function AccountPage({ user, onBack, onReorder, products, onViewInvoice, formatPrice }: AccountPageProps) {
+export function AccountPage({ user, onBack, onReorder, products, onViewInvoice, formatPrice, isAdminUser }: AccountPageProps) {
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [activeTab, setActiveTab] = useState<'profile' | 'addresses' | 'orders' | 'loyalty'>('profile');
@@ -252,6 +248,15 @@ export function AccountPage({ user, onBack, onReorder, products, onViewInvoice, 
                   <Award size={20} />
                   Loyalty & Rewards
                 </button>
+                {isAdminUser && (
+                  <button 
+                    onClick={() => navigate('/admin')}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-primary hover:bg-primary/10 transition-all font-bold"
+                  >
+                    <ShieldCheck size={20} />
+                    Admin Dashboard
+                  </button>
+                )}
                 <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800">
                   <button 
                     onClick={handleLogout}
@@ -576,7 +581,7 @@ export function AccountPage({ user, onBack, onReorder, products, onViewInvoice, 
                               </div>
                               <div className="flex flex-col gap-2 justify-center">
                                 <button 
-                                  onClick={() => onReorder(order.items)}
+                                  onClick={() => onReorder(order)}
                                   className="flex items-center justify-center gap-2 bg-primary text-slate-900 font-bold px-6 py-3 rounded-xl hover:bg-primary/90 transition-all whitespace-nowrap"
                                 >
                                   <ShoppingBag size={18} />
