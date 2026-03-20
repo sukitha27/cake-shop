@@ -29,9 +29,10 @@ import { useToast } from './Toast';
 
 interface AdminDashboardProps {
   onBack: () => void;
+  formatPrice: (price: number) => string;
 }
 
-export function AdminDashboard({ onBack }: AdminDashboardProps) {
+export function AdminDashboard({ onBack, formatPrice }: AdminDashboardProps) {
   const { addToast } = useToast();
   const [orders, setOrders] = useState<any[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -59,6 +60,15 @@ export function AdminDashboard({ onBack }: AdminDashboardProps) {
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  const [ordersPage, setOrdersPage] = useState(1);
+  const [customersPage, setCustomersPage] = useState(1);
+  const [productsPage, setProductsPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+
+  useEffect(() => setOrdersPage(1), [searchQuery, statusFilter, orderSort]);
+  useEffect(() => setCustomersPage(1), [customerSearchQuery, customerSort]);
+  useEffect(() => setProductsPage(1), [productSearchQuery, productSort]);
 
   const getOrderTime = (order: any) => {
     if (!order.createdAt) return 0;
@@ -289,6 +299,42 @@ export function AdminDashboard({ onBack }: AdminDashboardProps) {
     productSort
   );
 
+  const paginatedOrders = filteredOrders.slice((ordersPage - 1) * ITEMS_PER_PAGE, ordersPage * ITEMS_PER_PAGE);
+  const totalOrdersPages = Math.ceil(filteredOrders.length / ITEMS_PER_PAGE);
+
+  const paginatedCustomers = filteredCustomers.slice((customersPage - 1) * ITEMS_PER_PAGE, customersPage * ITEMS_PER_PAGE);
+  const totalCustomersPages = Math.ceil(filteredCustomers.length / ITEMS_PER_PAGE);
+
+  const paginatedProducts = filteredProducts.slice((productsPage - 1) * ITEMS_PER_PAGE, productsPage * ITEMS_PER_PAGE);
+  const totalProductsPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+
+  const PaginationControls = ({ currentPage, totalPages, onPageChange }: { currentPage: number, totalPages: number, onPageChange: (p: number) => void }) => {
+    if (totalPages <= 1) return null;
+    return (
+      <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80">
+        <div className="text-sm text-slate-500">
+          Page <span className="font-bold text-slate-900 dark:text-white">{currentPage}</span> of <span className="font-bold text-slate-900 dark:text-white">{totalPages}</span>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => onPageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-medium text-slate-600 dark:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+          >
+            Previous
+          </button>
+          <button
+            onClick={() => onPageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-medium text-slate-600 dark:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   const SortIcon = ({ field, currentSort }: { field: string, currentSort: { field: string, direction: 'asc' | 'desc' } }) => {
     if (currentSort.field !== field) return <ChevronsUpDown className="w-3 h-3 opacity-30" />;
     return (
@@ -441,12 +487,12 @@ export function AdminDashboard({ onBack }: AdminDashboardProps) {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredOrders.length === 0 ? (
+                      {paginatedOrders.length === 0 ? (
                         <tr>
                           <td colSpan={6} className="p-8 text-center text-slate-500">No orders found.</td>
                         </tr>
                       ) : (
-                        filteredOrders.map((order) => (
+                        paginatedOrders.map((order) => (
                           <tr key={order.id} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                             <td className="p-4 text-sm font-mono text-slate-500">
                               <div className="flex items-center gap-2">
@@ -472,7 +518,7 @@ export function AdminDashboard({ onBack }: AdminDashboardProps) {
                               {order.customerEmail || 'Unknown'} <br/>
                               <span className="text-xs text-slate-500 font-mono">{order.userId?.slice(0, 8)}...</span>
                             </td>
-                            <td className="p-4 text-sm font-bold text-slate-900 dark:text-white">${order.total.toFixed(2)}</td>
+                            <td className="p-4 text-sm font-bold text-slate-900 dark:text-white">{formatPrice(order.total)}</td>
                              <td className="p-4">
                               <div className="flex items-center gap-2">
                                 <select 
@@ -515,6 +561,7 @@ export function AdminDashboard({ onBack }: AdminDashboardProps) {
                     </tbody>
                   </table>
                 </div>
+                <PaginationControls currentPage={ordersPage} totalPages={totalOrdersPages} onPageChange={setOrdersPage} />
               </div>
             ) : activeTab === 'customers' ? (
               <div className="flex flex-col gap-4" role="tabpanel" id="customers-panel" aria-labelledby="customers-tab">
@@ -570,17 +617,17 @@ export function AdminDashboard({ onBack }: AdminDashboardProps) {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredCustomers.length === 0 ? (
+                      {paginatedCustomers.length === 0 ? (
                         <tr>
                           <td colSpan={6} className="p-8 text-center text-slate-500">No customers found.</td>
                         </tr>
                       ) : (
-                        filteredCustomers.map((customer, idx) => (
+                        paginatedCustomers.map((customer, idx) => (
                           <tr key={idx} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                             <td className="p-4 text-sm font-medium text-slate-900 dark:text-white">{customer.email}</td>
                             <td className="p-4 text-sm font-mono text-slate-500">{customer.userId}</td>
                             <td className="p-4 text-sm text-slate-900 dark:text-white">{customer.orderCount}</td>
-                            <td className="p-4 text-sm font-bold text-primary">${customer.totalSpent.toFixed(2)}</td>
+                            <td className="p-4 text-sm font-bold text-primary">{formatPrice(customer.totalSpent)}</td>
                             <td className="p-4 text-sm text-slate-500">{formatDate(customer.lastOrderDate)}</td>
                             <td className="p-4 text-right">
                               <button 
@@ -596,6 +643,7 @@ export function AdminDashboard({ onBack }: AdminDashboardProps) {
                     </tbody>
                   </table>
                 </div>
+                <PaginationControls currentPage={customersPage} totalPages={totalCustomersPages} onPageChange={setCustomersPage} />
               </div>
             ) : (
               <div className="flex flex-col gap-4" role="tabpanel" id="products-panel" aria-labelledby="products-tab">
@@ -668,12 +716,12 @@ export function AdminDashboard({ onBack }: AdminDashboardProps) {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredProducts.length === 0 ? (
+                      {paginatedProducts.length === 0 ? (
                         <tr>
-                          <td colSpan={5} className="p-8 text-center text-slate-500">No products found.</td>
+                          <td colSpan={6} className="p-8 text-center text-slate-500">No products found.</td>
                         </tr>
                       ) : (
-                        filteredProducts.map((product) => (
+                        paginatedProducts.map((product) => (
                           <tr key={product.id} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                             <td className="p-4">
                               <img 
@@ -691,7 +739,7 @@ export function AdminDashboard({ onBack }: AdminDashboardProps) {
                             </td>
                             <td className="p-4 text-sm font-medium text-slate-900 dark:text-white">{product.name}</td>
                             <td className="p-4 text-sm text-slate-500">{product.category}</td>
-                            <td className="p-4 text-sm font-bold text-primary">${product.price.toFixed(2)}</td>
+                            <td className="p-4 text-sm font-bold text-primary">{formatPrice(product.price)}</td>
                             <td className="p-4">
                               <span className={`px-2 py-1 rounded-full text-xs font-bold ${
                                 product.stockQuantity === 0 
@@ -730,6 +778,7 @@ export function AdminDashboard({ onBack }: AdminDashboardProps) {
                     </tbody>
                   </table>
                 </div>
+                <PaginationControls currentPage={productsPage} totalPages={totalProductsPages} onPageChange={setProductsPage} />
               </div>
             )}
           </div>
@@ -815,15 +864,15 @@ export function AdminDashboard({ onBack }: AdminDashboardProps) {
                       <tr key={i} className="border-b border-slate-200 dark:border-slate-700 last:border-0 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
                         <td className="p-3 text-sm text-slate-900 dark:text-white font-medium">{item.name}</td>
                         <td className="p-3 text-sm text-slate-600 dark:text-slate-400 text-center">{item.quantity}</td>
-                        <td className="p-3 text-sm text-slate-600 dark:text-slate-400 text-right">${item.price?.toFixed(2)}</td>
-                        <td className="p-3 text-sm text-slate-900 dark:text-white font-bold text-right">${(item.price * item.quantity).toFixed(2)}</td>
+                        <td className="p-3 text-sm text-slate-600 dark:text-slate-400 text-right">{formatPrice(item.price)}</td>
+                        <td className="p-3 text-sm text-slate-900 dark:text-white font-bold text-right">{formatPrice(item.price * item.quantity)}</td>
                       </tr>
                     ))}
                   </tbody>
                   <tfoot>
                     <tr className="bg-slate-100 dark:bg-slate-800">
                       <td colSpan={3} className="p-3 text-sm font-bold text-slate-900 dark:text-white text-right">Order Total:</td>
-                      <td className="p-3 text-sm font-bold text-primary text-right">${selectedOrder.total?.toFixed(2)}</td>
+                      <td className="p-3 text-sm font-bold text-primary text-right">{formatPrice(selectedOrder.total)}</td>
                     </tr>
                   </tfoot>
                 </table>
@@ -1043,7 +1092,7 @@ export function AdminDashboard({ onBack }: AdminDashboardProps) {
               </div>
               <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
                 <p className="text-sm text-slate-500 mb-1">Total Spent</p>
-                <p className="text-2xl font-bold text-primary">${selectedCustomer.totalSpent.toFixed(2)}</p>
+                <p className="text-2xl font-bold text-primary">{formatPrice(selectedCustomer.totalSpent)}</p>
               </div>
               <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
                 <p className="text-sm text-slate-500 mb-1">Last Order</p>
@@ -1085,7 +1134,7 @@ export function AdminDashboard({ onBack }: AdminDashboardProps) {
                             {order.status}
                           </span>
                         </td>
-                        <td className="p-3 text-sm font-bold text-slate-900 dark:text-white text-right">${order.total.toFixed(2)}</td>
+                        <td className="p-3 text-sm font-bold text-slate-900 dark:text-white text-right">{formatPrice(order.total)}</td>
                         <td className="p-3 text-right">
                           <button 
                             onClick={() => {

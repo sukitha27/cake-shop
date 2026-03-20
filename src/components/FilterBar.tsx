@@ -12,6 +12,7 @@ interface FilterBarProps {
   categories: string[];
   selectedCategory: string;
   setSelectedCategory: (category: string) => void;
+  formatPrice: (price: number) => string;
 }
 
 export const FilterBar: React.FC<FilterBarProps> = ({
@@ -23,7 +24,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   setSelectedDietaryTags,
   categories,
   selectedCategory,
-  setSelectedCategory
+  setSelectedCategory,
+  formatPrice
 }) => {
   const [isExpanded, setIsExpanded] = React.useState(false);
   const dietaryTags = ['Gluten-Free', 'Nut-Free', 'Vegan', 'Dairy-Free'];
@@ -145,7 +147,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               {/* Price Range */}
               <div>
                 <h4 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">
-                  Price Range: ${priceRange[0]} - ${priceRange[1]}
+                  Price Range: {formatPrice(priceRange[0])} - {formatPrice(priceRange[1])}
                 </h4>
                 <div className="px-2">
                   <input
@@ -158,8 +160,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                     className="w-full accent-primary h-2 bg-soft-mint dark:bg-slate-900 rounded-lg appearance-none cursor-pointer"
                   />
                   <div className="flex justify-between mt-2 text-[10px] font-bold text-slate-400">
-                    <span>$0</span>
-                    <span>$100+</span>
+                    <span>{formatPrice(0)}</span>
+                    <span>{formatPrice(100)}+</span>
                   </div>
                 </div>
               </div>

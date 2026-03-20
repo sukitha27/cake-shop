@@ -25,9 +25,10 @@ interface CartDrawerProps {
   onUpdateQuantity: (productName: string, delta: number) => void;
   onRemoveItem: (productName: string) => void;
   onCheckout: () => void;
+  formatPrice: (price: number) => string;
 }
 
-export function CartDrawer({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem, onCheckout }: CartDrawerProps) {
+export function CartDrawer({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem, onCheckout, formatPrice }: CartDrawerProps) {
   const items = Object.values(cartItems);
   const subtotal = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
 
@@ -112,7 +113,7 @@ export function CartDrawer({ isOpen, onClose, cartItems, onUpdateQuantity, onRem
                       </button>
                     </div>
                     <div className="text-primary font-bold">
-                      ${item.product.price.toFixed(2)}
+                      {formatPrice(item.product.price)}
                     </div>
                     <div className="flex items-center gap-3 mt-2">
                       <button 
@@ -154,7 +155,7 @@ export function CartDrawer({ isOpen, onClose, cartItems, onUpdateQuantity, onRem
             <div className="flex items-center justify-between mb-6">
               <span className="text-lg font-bold text-slate-600 dark:text-slate-300">Subtotal</span>
               <span className="text-2xl font-black text-accent dark:text-white">
-                ${subtotal.toFixed(2)}
+                {formatPrice(subtotal)}
               </span>
             </div>
             <button 

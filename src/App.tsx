@@ -134,33 +134,6 @@ const INITIAL_PRODUCTS: Product[] = [
   }
 ];
 
-const treats = [
-  {
-    title: 'Best Sellers',
-    description: 'Our most loved treats, perfect for any first-timer or longtime fan.',
-    image: 'https://images.unsplash.com/photo-1550617931-e17a7b70dce2?auto=format&fit=crop&q=80&w=800',
-    alt: 'Topseller cupcakes variety box'
-  },
-  {
-    title: 'Birthday',
-    description: 'Make their special day even sweeter with our celebratory cakes.',
-    image: 'https://images.unsplash.com/photo-1558301211-0d8c8ddee6ec?auto=format&fit=crop&q=80&w=800',
-    alt: 'Birthday cake with colorful sprinkles'
-  },
-  {
-    title: 'Gifts Under $50',
-    description: 'Small price, big delight. Perfect gestures for any budget.',
-    image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&q=80&w=800',
-    alt: 'Elegant gift box with ribbon'
-  },
-  {
-    title: 'Lotsa Chocolate!',
-    description: 'For the true cocoa enthusiasts. Rich, dark, and fudgy.',
-    image: 'https://images.unsplash.com/photo-1461008312963-30bb3fdb6b7c?auto=format&fit=crop&q=80&w=800',
-    alt: 'Decadent dark chocolate brownies and bars'
-  }
-];
-
 import { 
   ShoppingBag, 
   Search, 
@@ -200,11 +173,13 @@ import {
   CheckCircle,
   Sun,
   Moon,
-  LogOut
+  LogOut,
+  Loader2
 } from 'lucide-react';
 import { db, auth } from './firebase';
 import { collection, onSnapshot, doc, setDoc, getDocs, deleteDoc, getDoc, serverTimestamp, runTransaction } from 'firebase/firestore';
 import { signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, User } from 'firebase/auth';
+import { AuthModal } from './components/AuthModal';
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
@@ -328,12 +303,55 @@ function MainApp() {
   const [orders, setOrders] = useState<any[]>([]);
   const [selectedInvoiceOrder, setSelectedInvoiceOrder] = useState<any | null>(null);
   const [currentView, setCurrentView] = useState<'home' | 'orders' | 'favorites' | 'admin' | 'account'>('home');
+  const currentViewRef = React.useRef(currentView);
+  
+  React.useEffect(() => {
+    currentViewRef.current = currentView;
+  }, [currentView]);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
   const [selectedDietaryTags, setSelectedDietaryTags] = useState<string[]>([]);
   const [cartItems, setCartItems] = useState<Record<string, { product: Product, quantity: number }>>({});
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [currency, setCurrency] = useState<'LKR' | 'USD'>('LKR');
+  const exchangeRate = 300; // 1 USD = 300 LKR
+
+  const formatPrice = (price: number) => {
+    if (currency === 'USD') {
+      return `$${price.toFixed(2)}`;
+    }
+    return `Rs. ${(price * exchangeRate).toLocaleString()}`;
+  };
+
+  const treats = [
+    {
+      title: 'Best Sellers',
+      description: 'Our most loved treats, perfect for any first-timer or longtime fan.',
+      image: 'https://images.unsplash.com/photo-1550617931-e17a7b70dce2?auto=format&fit=crop&q=80&w=800',
+      alt: 'Topseller cupcakes variety box'
+    },
+    {
+      title: 'Birthday',
+      description: 'Make their special day even sweeter with our celebratory cakes.',
+      image: 'https://images.unsplash.com/photo-1558301211-0d8c8ddee6ec?auto=format&fit=crop&q=80&w=800',
+      alt: 'Birthday cake with colorful sprinkles'
+    },
+    {
+      title: `Gifts Under ${formatPrice(50)}`,
+      description: 'Small price, big delight. Perfect gestures for any budget.',
+      image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&q=80&w=800',
+      alt: 'Elegant gift box with ribbon'
+    },
+    {
+      title: 'Lotsa Chocolate!',
+      description: 'For the true cocoa enthusiasts. Rich, dark, and fudgy.',
+      image: 'https://images.unsplash.com/photo-1461008312963-30bb3fdb6b7c?auto=format&fit=crop&q=80&w=800',
+      alt: 'Decadent dark chocolate brownies and bars'
+    }
+  ];
+
   const [addedItems, setAddedItems] = useState<Record<string, boolean>>({});
   const [addedProduct, setAddedProduct] = useState<Product | null>(null);
   const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
@@ -343,6 +361,7 @@ function MainApp() {
   const [isLoading, setIsLoading] = useState(true);
   const [trackingOrder, setTrackingOrder] = useState<any | null>(null);
   const [isAdminUser, setIsAdminUser] = useState(false);
+  const [isAuthReady, setIsAuthReady] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   React.useEffect(() => {
@@ -362,18 +381,30 @@ function MainApp() {
         try {
           const userSnap = await getDoc(userRef);
           if (!userSnap.exists()) {
+            const initialRole = currentUser.email === 'sukithabandara13@gmail.com' ? 'admin' : 'user';
             await setDoc(userRef, {
-              role: currentUser.email === 'sukithabandara13@gmail.com' ? 'admin' : 'user',
+              role: initialRole,
               email: currentUser.email || '',
               displayName: currentUser.displayName || '',
               phoneNumber: '',
-              addresses: []
+              addresses: [],
+              points: 0
             });
+            setIsAdminUser(initialRole === 'admin');
+          } else {
+            const userData = userSnap.data();
+            setIsAdminUser(userData?.role === 'admin');
           }
         } catch (error) {
           console.error("Error ensuring user document exists:", error);
         }
+      } else {
+        setIsAdminUser(false);
+        if (['account', 'admin', 'orders', 'favorites'].includes(currentViewRef.current)) {
+          setCurrentView('home');
+        }
       }
+      setIsAuthReady(true);
     });
 
     const productsRef = collection(db, 'products');
@@ -647,7 +678,7 @@ function MainApp() {
         quantity: item.quantity
       }));
       const total = items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
-      const orderDetails = { items: orderItems, total };
+      const orderDetails = { items: orderItems, total, currency };
 
       try {
         await fetch('/api/send-confirmation', {
@@ -687,13 +718,8 @@ function MainApp() {
     setCurrentView('home');
   };
 
-  const handleLogin = async () => {
-    try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-    } catch (error) {
-      console.error('Error logging in:', error);
-    }
+  const handleLogin = () => {
+    setIsAuthModalOpen(true);
   };
 
   const handleLogout = async () => {
@@ -757,7 +783,7 @@ function MainApp() {
     >
       <div className="aspect-square rounded-xl overflow-hidden mb-4 bg-slate-100 shadow-sm group-hover:shadow-xl transition-all duration-300 relative">
         <img 
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+          className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ${product.stockQuantity <= 0 ? 'grayscale opacity-70' : ''}`} 
           alt={product.alt} 
           src={product.image} 
           referrerPolicy="no-referrer"
@@ -768,17 +794,28 @@ function MainApp() {
             }
           }}
         />
+        {product.stockQuantity <= 0 && (
+          <div className="absolute top-2 left-2 z-10 px-2 py-1 bg-red-500 text-white text-[10px] font-bold rounded-md uppercase tracking-wider shadow-sm">
+            Out of Stock
+          </div>
+        )}
         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
           <button 
-            onClick={(e) => handleAddToCart(product, e)}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (product.stockQuantity > 0) handleAddToCart(product, e);
+            }}
+            disabled={product.stockQuantity <= 0}
             className={`px-6 py-2 rounded-full font-bold text-sm transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 ${
-              addedItems[product.name] 
-                ? 'bg-green-500 text-white scale-105' 
-                : 'bg-primary text-slate-900 hover:bg-white hover:text-primary'
+              product.stockQuantity <= 0
+                ? 'bg-red-500 text-white cursor-not-allowed'
+                : addedItems[product.name] 
+                  ? 'bg-green-500 text-white scale-105' 
+                  : 'bg-primary text-slate-900 hover:bg-white hover:text-primary'
             }`}
-            aria-label={`Add ${product.name} to cart`}
+            aria-label={product.stockQuantity <= 0 ? `Out of stock` : `Add ${product.name} to cart`}
           >
-            {addedItems[product.name] ? 'Added!' : 'Add to Cart'}
+            {product.stockQuantity <= 0 ? 'Out of Stock' : addedItems[product.name] ? 'Added!' : 'Add to Cart'}
           </button>
         </div>
       </div>
@@ -798,7 +835,7 @@ function MainApp() {
           </span>
         ))}
       </div>
-      <p className="font-bold text-primary text-center">${product.price.toFixed(2)}</p>
+      <p className="font-bold text-primary text-center">{formatPrice(product.price)}</p>
     </motion.div>
   ));
 
@@ -817,6 +854,7 @@ function MainApp() {
             cartItems={cartItems}
             onBack={() => setIsCheckoutOpen(false)}
             onPlaceOrder={handlePlaceOrder}
+            formatPrice={formatPrice}
           />
         </motion.div>
       ) : (
@@ -828,9 +866,9 @@ function MainApp() {
           transition={{ duration: 0.3 }}
           className="relative flex min-h-screen w-full flex-col overflow-x-hidden"
         >
-          <header className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-[1200px]">
-            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/40 dark:border-slate-700 shadow-lg rounded-full px-4 lg:px-6 py-3 flex items-center justify-between">
-              <div className="flex items-center gap-6 lg:gap-10">
+          <header className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[98%] sm:w-[95%] max-w-[1200px]">
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/40 dark:border-slate-700 shadow-lg rounded-full px-2 sm:px-4 lg:px-6 py-2 sm:py-3 flex items-center justify-between">
+              <div className="flex items-center gap-2 sm:gap-6 lg:gap-10 shrink-0">
                 <div 
                   className="flex items-center gap-2 cursor-pointer"
                   onClick={() => scrollToSection('top')}
@@ -845,11 +883,25 @@ function MainApp() {
                   <button onClick={() => scrollToSection('about')} className="text-sm font-bold hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm px-4 py-2 rounded-full transition-all">About Us</button>
                 </nav>
               </div>
-              <div className="flex items-center gap-2 lg:gap-4">
+              <div className="flex items-center gap-1 sm:gap-2 lg:gap-4">
+                {/* Currency Toggle */}
+                <button
+                  onClick={() => setCurrency(currency === 'LKR' ? 'USD' : 'LKR')}
+                  className="px-2 sm:px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] sm:text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-primary/20 transition-all border border-slate-200/50 dark:border-slate-700/50 flex items-center shrink-0"
+                  aria-label={`Switch to ${currency === 'LKR' ? 'USD' : 'LKR'}`}
+                >
+                  <span className="sm:hidden">{currency}</span>
+                  <div className="hidden sm:flex items-center gap-1.5">
+                    <span className={currency === 'LKR' ? 'text-primary' : ''}>LKR</span>
+                    <span className="text-slate-300 dark:text-slate-600">|</span>
+                    <span className={currency === 'USD' ? 'text-primary' : ''}>USD</span>
+                  </div>
+                </button>
+
                 {/* Dark Mode Toggle */}
                 <button
                   onClick={toggleTheme}
-                  className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+                  className="p-1.5 sm:p-2 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors shrink-0"
                   aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
                   title={isDark ? "Switch to light mode" : "Switch to dark mode"}
                 >
@@ -865,63 +917,67 @@ function MainApp() {
                   <input className="bg-transparent border-none focus:outline-none focus:ring-0 text-sm w-32 placeholder:text-slate-500" placeholder="Search" type="text" />
                 </div>
                 <div className="flex items-center gap-1 lg:gap-2">
-                  {user ? (
+                  {!isAuthReady ? (
+                    <div className="w-8 h-8 flex items-center justify-center">
+                      <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                    </div>
+                  ) : user ? (
                     <div className="flex items-center gap-1 lg:gap-2">
                       <button 
                         onClick={() => setCurrentView('favorites')}
-                        className={`p-2 rounded-full transition-colors ${currentView === 'favorites' ? 'bg-primary text-slate-900 shadow-sm' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                        className={`p-1.5 sm:p-2 rounded-full transition-colors ${currentView === 'favorites' ? 'bg-primary text-slate-900 shadow-sm' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
                         title="Favorites"
                         aria-label="View Favorites"
                       >
-                        <Heart className="w-5 h-5" aria-hidden="true" />
+                        <Heart className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
                       </button>
                       <button 
                         onClick={() => setCurrentView('orders')}
-                        className={`p-2 rounded-full transition-colors ${currentView === 'orders' ? 'bg-primary text-slate-900 shadow-sm' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                        className={`p-1.5 sm:p-2 rounded-full transition-colors ${currentView === 'orders' ? 'bg-primary text-slate-900 shadow-sm' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
                         title="Order History"
                         aria-label="View Order History"
                       >
-                        <FileText className="w-5 h-5" aria-hidden="true" />
+                        <FileText className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
                       </button>
                       {isAdminUser && (
                         <button 
                           onClick={() => setCurrentView('admin')}
-                          className={`p-2 rounded-full transition-colors ${currentView === 'admin' ? 'bg-primary text-slate-900 shadow-sm' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                          className={`p-1.5 sm:p-2 rounded-full transition-colors ${currentView === 'admin' ? 'bg-primary text-slate-900 shadow-sm' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
                           title="Admin Dashboard"
                           aria-label="View Admin Dashboard"
                         >
-                          <ShieldCheck className="w-5 h-5" aria-hidden="true" />
+                          <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
                         </button>
                       )}
                       <button 
                         onClick={() => setCurrentView('account')}
-                        className={`p-2 rounded-full transition-colors ${currentView === 'account' ? 'bg-primary text-slate-900 shadow-sm' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                        className={`p-1.5 sm:p-2 rounded-full transition-colors ${currentView === 'account' ? 'bg-primary text-slate-900 shadow-sm' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
                         title="My Account"
                         aria-label="View My Account"
                       >
                         {user.photoURL ? (
-                          <img src={user.photoURL} alt="User" className="w-6 h-6 rounded-full" referrerPolicy="no-referrer" />
+                          <img src={user.photoURL} alt="User" className="w-5 h-5 sm:w-6 sm:h-6 rounded-full" referrerPolicy="no-referrer" />
                         ) : (
-                          <UserIcon className="w-5 h-5" aria-hidden="true" />
+                          <UserIcon className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
                         )}
                       </button>
                     </div>
                   ) : (
                     <button 
                       onClick={handleLogin}
-                      className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+                      className="p-1.5 sm:p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
                       title="Log in"
                       aria-label="Log in"
                     >
-                      <UserIcon className="w-[22px] h-[22px]" aria-hidden="true" />
+                      <UserIcon className="w-4 h-4 sm:w-[22px] sm:h-[22px]" aria-hidden="true" />
                     </button>
                   )}
                   <button 
                     onClick={() => setIsCartOpen(true)}
-                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors relative"
+                    className="p-1.5 sm:p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors relative"
                     aria-label={`Open cart, ${cartCount} items`}
                   >
-                    <ShoppingCart className="w-5 h-5" aria-hidden="true" />
+                    <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
                     {cartCount > 0 && (
                       <span className="absolute top-0 right-0 bg-primary text-[10px] font-bold px-1.5 rounded-full text-slate-900 animate-in zoom-in duration-300 shadow-sm">
                         {cartCount}
@@ -1018,6 +1074,7 @@ function MainApp() {
               onBack={() => setViewingProduct(null)} 
               onAddToCart={handleAddToCart} 
               isAdded={addedItems[viewingProduct.name] || false}
+              formatPrice={formatPrice}
             />
           </motion.div>
         ) : currentView === 'admin' && isAdminUser ? (
@@ -1028,7 +1085,7 @@ function MainApp() {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <AdminDashboard onBack={() => setCurrentView('home')} />
+            <AdminDashboard onBack={() => setCurrentView('home')} formatPrice={formatPrice} />
           </motion.div>
         ) : currentView === 'account' && user ? (
           <motion.div
@@ -1044,6 +1101,7 @@ function MainApp() {
               onReorder={handleReorder}
               products={products}
               onViewInvoice={setSelectedInvoiceOrder}
+              formatPrice={formatPrice}
             />
           </motion.div>
         ) : currentView === 'favorites' ? (
@@ -1112,14 +1170,14 @@ function MainApp() {
                       </div>
                       <div className="text-right">
                         <p className="text-sm text-slate-500">Total</p>
-                        <p className="font-bold text-primary">${order.total.toFixed(2)}</p>
+                        <p className="font-bold text-primary">{formatPrice(order.total)}</p>
                       </div>
                     </div>
                     <div className="space-y-3 mb-6">
                       {order.items.map((item: any, i: number) => (
                         <div key={i} className="flex justify-between items-center">
                           <p className="font-medium">{item.quantity}x {item.name}</p>
-                          <p className="text-slate-600 dark:text-slate-400">${(item.price * item.quantity).toFixed(2)}</p>
+                          <p className="text-slate-600 dark:text-slate-400">{formatPrice(item.price * item.quantity)}</p>
                         </div>
                       ))}
                     </div>
@@ -1179,6 +1237,7 @@ function MainApp() {
             categories={categories}
             selectedCategory={selectedCategory}
             setSelectedCategory={setSelectedCategory}
+            formatPrice={formatPrice}
           />
 
           {isLoading ? (
@@ -1448,7 +1507,7 @@ function MainApp() {
             </form>
           </div>
         </section>
-            <ChatBot products={products} onViewProduct={setViewingProduct} />
+            <ChatBot products={products} onViewProduct={setViewingProduct} formatPrice={formatPrice} />
           </motion.div>
         )}
         </AnimatePresence>
@@ -1549,6 +1608,7 @@ function MainApp() {
               <div>
                 <p className="font-bold text-lg dark:text-white">{addedProduct.name}</p>
                 <p className="text-sm text-slate-500">{addedProduct.category}</p>
+                <p className="text-primary font-bold">{formatPrice(addedProduct.price)}</p>
               </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-3">
@@ -1586,6 +1646,7 @@ function MainApp() {
           setIsCartOpen(false);
           setIsCheckoutOpen(true);
         }}
+        formatPrice={formatPrice}
       />
 
       <OrderTracker 
@@ -1599,6 +1660,7 @@ function MainApp() {
           <Invoice 
             order={selectedInvoiceOrder} 
             onClose={() => setSelectedInvoiceOrder(null)} 
+            formatPrice={formatPrice}
           />
         )}
       </AnimatePresence>
@@ -1638,6 +1700,10 @@ function MainApp() {
               </div>
             </div>
           )}
+          <AuthModal 
+            isOpen={isAuthModalOpen} 
+            onClose={() => setIsAuthModalOpen(false)} 
+          />
         </motion.div>
       )}
     </AnimatePresence>

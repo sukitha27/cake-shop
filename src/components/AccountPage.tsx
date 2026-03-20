@@ -41,9 +41,10 @@ interface AccountPageProps {
   onReorder: (items: any[]) => void;
   products: Product[];
   onViewInvoice: (order: any) => void;
+  formatPrice: (price: number) => string;
 }
 
-export function AccountPage({ user, onBack, onReorder, products, onViewInvoice }: AccountPageProps) {
+export function AccountPage({ user, onBack, onReorder, products, onViewInvoice, formatPrice }: AccountPageProps) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [activeTab, setActiveTab] = useState<'profile' | 'addresses' | 'orders' | 'loyalty'>('profile');
@@ -171,6 +172,17 @@ export function AccountPage({ user, onBack, onReorder, products, onViewInvoice }
   const handleLogout = async () => {
     await signOut(auth);
     onBack();
+  };
+
+  const handleMarkAsDelivered = async (orderId: string) => {
+    try {
+      await updateDoc(doc(db, 'users', user.uid, 'orders', orderId), {
+        status: 'delivered'
+      });
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'delivered' } : o));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `users/${user.uid}/orders/${orderId}`);
+    }
   };
 
   const formatDate = (date: any) => {
@@ -524,7 +536,7 @@ export function AccountPage({ user, onBack, onReorder, products, onViewInvoice }
                               </div>
                               <div>
                                 <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Total</p>
-                                <p className="text-sm font-semibold text-slate-900 dark:text-white">${order.total.toFixed(2)}</p>
+                                <p className="text-sm font-semibold text-slate-900 dark:text-white">{formatPrice(order.total)}</p>
                               </div>
                               <div>
                                 <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Status</p>
@@ -557,7 +569,7 @@ export function AccountPage({ user, onBack, onReorder, products, onViewInvoice }
                                     <div>
                                       <h4 className="font-bold text-slate-900 dark:text-white">{item.name}</h4>
                                       <p className="text-sm text-slate-500">Quantity: {item.quantity}</p>
-                                      <p className="text-sm font-bold text-primary">${item.price.toFixed(2)}</p>
+                                      <p className="text-sm font-bold text-primary">{formatPrice(item.price)}</p>
                                     </div>
                                   </div>
                                 ))}
@@ -570,6 +582,15 @@ export function AccountPage({ user, onBack, onReorder, products, onViewInvoice }
                                   <ShoppingBag size={18} />
                                   Buy it again
                                 </button>
+                                {order.status !== 'delivered' && order.status !== 'cancelled' && (
+                                  <button 
+                                    onClick={() => handleMarkAsDelivered(order.id)}
+                                    className="flex items-center justify-center gap-2 bg-green-500 text-white font-bold px-6 py-3 rounded-xl hover:bg-green-600 transition-all whitespace-nowrap"
+                                  >
+                                    <Check size={18} />
+                                    Mark as Delivered
+                                  </button>
+                                )}
                                 <button 
                                   onClick={() => onViewInvoice(order)}
                                   className="text-slate-500 hover:text-slate-900 dark:hover:text-white text-sm font-semibold transition-all"

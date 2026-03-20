@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { collection, onSnapshot, query, orderBy, addDoc, serverTimestamp, getDocs, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import { User } from 'firebase/auth';
-import { Star, CheckCircle, MessageSquare, Send, User as UserIcon } from 'lucide-react';
+import { Star, CheckCircle, MessageSquare, Send, User as UserIcon, Plus } from 'lucide-react';
 
 interface Review {
   id: string;
@@ -12,6 +12,7 @@ interface Review {
   userPhoto?: string;
   rating: number;
   comment: string;
+  reviewPhoto?: string;
   createdAt: any;
   isVerified: boolean;
 }
@@ -26,6 +27,7 @@ export function ProductReviews({ productId, productName, user }: ProductReviewsP
   const [reviews, setReviews] = useState<Review[]>([]);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
+  const [reviewPhoto, setReviewPhoto] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -53,12 +55,13 @@ export function ProductReviews({ productId, productName, user }: ProductReviewsP
       try {
         // Check if user has an order containing this product
         const ordersRef = collection(db, 'users', user.uid, 'orders');
-        const q = query(ordersRef, where('status', '==', 'delivered'));
-        const snapshot = await getDocs(q);
+        // For demo purposes, we'll allow 'processing' and 'shipped' as well as 'delivered'
+        const snapshot = await getDocs(ordersRef);
         
         const hasPurchased = snapshot.docs.some(doc => {
           const order = doc.data();
-          return order.items.some((item: any) => item.name === productName);
+          const isEligibleStatus = ['delivered', 'processing', 'shipped'].includes(order.status);
+          return isEligibleStatus && order.items.some((item: any) => item.name === productName);
         });
         
         setIsVerified(hasPurchased);
@@ -69,6 +72,21 @@ export function ProductReviews({ productId, productName, user }: ProductReviewsP
 
     checkVerification();
   }, [user, productName]);
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 1024 * 1024) { // 1MB limit for base64
+        alert("Photo is too large. Please choose a photo under 1MB.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setReviewPhoto(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,11 +101,13 @@ export function ProductReviews({ productId, productName, user }: ProductReviewsP
         userPhoto: user.photoURL || '',
         rating,
         comment: comment.trim(),
+        reviewPhoto: reviewPhoto || '',
         createdAt: serverTimestamp(),
         isVerified: isVerified
       });
       setComment('');
       setRating(5);
+      setReviewPhoto(null);
       setShowForm(false);
     } catch (error) {
       console.error("Error submitting review:", error);
@@ -179,6 +199,29 @@ export function ProductReviews({ productId, productName, user }: ProductReviewsP
                 />
               </div>
 
+              <div className="mb-6">
+                <label className="block text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Add a Photo (Optional)</label>
+                <div className="flex items-center gap-4">
+                  <label className="cursor-pointer flex items-center justify-center w-24 h-24 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-primary transition-colors overflow-hidden bg-white dark:bg-slate-800">
+                    {reviewPhoto ? (
+                      <img src={reviewPhoto} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <Plus className="text-slate-400" />
+                    )}
+                    <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
+                  </label>
+                  {reviewPhoto && (
+                    <button 
+                      type="button" 
+                      onClick={() => setReviewPhoto(null)}
+                      className="text-xs font-bold text-red-500 hover:underline"
+                    >
+                      Remove Photo
+                    </button>
+                  )}
+                </div>
+              </div>
+
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm">
                   {isVerified ? (
@@ -243,9 +286,19 @@ export function ProductReviews({ productId, productName, user }: ProductReviewsP
                 ))}
               </div>
             </div>
-            <p className="text-slate-600 dark:text-slate-300 leading-relaxed italic">
+            <p className="text-slate-600 dark:text-slate-300 leading-relaxed italic mb-4">
               "{review.comment}"
             </p>
+            {review.reviewPhoto && (
+              <div className="w-full max-w-sm rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800">
+                <img 
+                  src={review.reviewPhoto} 
+                  alt="Review" 
+                  className="w-full h-auto object-cover max-h-64" 
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+            )}
           </motion.div>
         ))}
 

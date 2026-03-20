@@ -13,16 +13,26 @@ import {
 } from 'lucide-react';
 import { useToast } from './Toast';
 
-function AnimatedNumber({ value }: { value: number }) {
+function AnimatedNumber({ value, formatPrice }: { value: number; formatPrice: (price: number) => string }) {
   const motionValue = useMotionValue(value);
-  const display = useTransform(motionValue, (current) => `$${current.toFixed(2)}`);
+  const [displayValue, setDisplayValue] = useState(formatPrice(value));
 
   useEffect(() => {
-    const controls = animate(motionValue, value, { duration: 0.4, ease: "easeOut" });
+    const controls = animate(motionValue, value, { 
+      duration: 0.4, 
+      ease: "easeOut",
+      onUpdate: (latest) => {
+        setDisplayValue(formatPrice(latest));
+      }
+    });
     return controls.stop;
-  }, [value, motionValue]);
+  }, [value, motionValue, formatPrice]);
 
-  return <motion.span>{display}</motion.span>;
+  useEffect(() => {
+    setDisplayValue(formatPrice(value));
+  }, [formatPrice, value]);
+
+  return <motion.span>{displayValue}</motion.span>;
 }
 
 interface Product {
@@ -44,6 +54,7 @@ interface CheckoutProps {
   cartItems: Record<string, CartItem>;
   onBack: () => void;
   onPlaceOrder: (email: string, shippingInfo: ShippingInfo) => Promise<void>;
+  formatPrice: (price: number) => string;
 }
 
 export interface ShippingInfo {
@@ -55,7 +66,7 @@ export interface ShippingInfo {
   zip: string;
 }
 
-export function Checkout({ cartItems, onBack, onPlaceOrder }: CheckoutProps) {
+export function Checkout({ cartItems, onBack, onPlaceOrder, formatPrice }: CheckoutProps) {
   const { addToast } = useToast();
   const items = Object.values(cartItems);
   const subtotal = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
@@ -379,7 +390,7 @@ export function Checkout({ cartItems, onBack, onPlaceOrder }: CheckoutProps) {
                       <div className="flex-1 min-w-0 py-1">
                         <h4 className="font-bold text-sm text-slate-900 dark:text-white truncate">{item.product.name}</h4>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Quantity: {item.quantity}</p>
-                        <p className="font-bold text-sm text-primary mt-2">${(item.product.price * item.quantity).toFixed(2)}</p>
+                        <p className="font-bold text-sm text-primary mt-2">{formatPrice(item.product.price * item.quantity)}</p>
                       </div>
                     </motion.div>
                   ))}
@@ -390,26 +401,26 @@ export function Checkout({ cartItems, onBack, onPlaceOrder }: CheckoutProps) {
                 <div className="flex justify-between text-sm text-slate-500 dark:text-slate-400">
                   <span>Subtotal</span>
                   <span className="font-bold text-slate-900 dark:text-white">
-                    <AnimatedNumber value={subtotal} />
+                    <AnimatedNumber value={subtotal} formatPrice={formatPrice} />
                   </span>
                 </div>
                 <div className="flex justify-between text-sm text-slate-500 dark:text-slate-400">
                   <span>Shipping</span>
                   <span className="font-bold text-slate-900 dark:text-white">
-                    <AnimatedNumber value={shipping} />
+                    <AnimatedNumber value={shipping} formatPrice={formatPrice} />
                   </span>
                 </div>
                 <div className="flex justify-between text-sm text-slate-500 dark:text-slate-400">
                   <span>Estimated Tax (8%)</span>
                   <span className="font-bold text-slate-900 dark:text-white">
-                    <AnimatedNumber value={tax} />
+                    <AnimatedNumber value={tax} formatPrice={formatPrice} />
                   </span>
                 </div>
                 <div className="flex justify-between items-end pt-4 border-t border-slate-100 dark:border-slate-800">
                   <div className="flex flex-col">
                     <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Total Amount</span>
                     <span className="text-3xl font-black text-primary">
-                      <AnimatedNumber value={total} />
+                      <AnimatedNumber value={total} formatPrice={formatPrice} />
                     </span>
                   </div>
                 </div>
@@ -470,7 +481,7 @@ export function Checkout({ cartItems, onBack, onPlaceOrder }: CheckoutProps) {
               <ChevronUp className="w-3 h-3" />
             </span>
             <span className="text-xl font-black text-primary">
-              <AnimatedNumber value={total} />
+              <AnimatedNumber value={total} formatPrice={formatPrice} />
             </span>
           </button>
           <button 
@@ -529,7 +540,7 @@ export function Checkout({ cartItems, onBack, onPlaceOrder }: CheckoutProps) {
                     <div className="flex-1 min-w-0 py-1">
                       <h4 className="font-bold text-sm text-slate-900 dark:text-white truncate">{item.product.name}</h4>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Quantity: {item.quantity}</p>
-                      <p className="font-bold text-sm text-primary mt-2">${(item.product.price * item.quantity).toFixed(2)}</p>
+                      <p className="font-bold text-sm text-primary mt-2">{formatPrice(item.product.price * item.quantity)}</p>
                     </div>
                   </div>
                 ))}
@@ -539,26 +550,26 @@ export function Checkout({ cartItems, onBack, onPlaceOrder }: CheckoutProps) {
                 <div className="flex justify-between text-sm text-slate-500 dark:text-slate-400">
                   <span>Subtotal</span>
                   <span className="font-bold text-slate-900 dark:text-white">
-                    <AnimatedNumber value={subtotal} />
+                    <AnimatedNumber value={subtotal} formatPrice={formatPrice} />
                   </span>
                 </div>
                 <div className="flex justify-between text-sm text-slate-500 dark:text-slate-400">
                   <span>Shipping</span>
                   <span className="font-bold text-slate-900 dark:text-white">
-                    <AnimatedNumber value={shipping} />
+                    <AnimatedNumber value={shipping} formatPrice={formatPrice} />
                   </span>
                 </div>
                 <div className="flex justify-between text-sm text-slate-500 dark:text-slate-400">
                   <span>Tax (8%)</span>
                   <span className="font-bold text-slate-900 dark:text-white">
-                    <AnimatedNumber value={tax} />
+                    <AnimatedNumber value={tax} formatPrice={formatPrice} />
                   </span>
                 </div>
                 <div className="flex justify-between items-end pt-4 border-t border-slate-100 dark:border-slate-800">
                   <div className="flex flex-col">
                     <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Total Amount</span>
                     <span className="text-3xl font-black text-primary">
-                      <AnimatedNumber value={total} />
+                      <AnimatedNumber value={total} formatPrice={formatPrice} />
                     </span>
                   </div>
                 </div>

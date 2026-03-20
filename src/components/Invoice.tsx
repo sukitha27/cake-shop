@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { motion } from 'motion/react';
-import { X, Download, Printer, ShoppingBag, CheckCircle2, Calendar, Mail, Hash, MapPin, Phone, Globe } from 'lucide-react';
+import { X, Download, Printer, ShoppingBag, CheckCircle2, Calendar, Mail, Hash, MapPin, Phone, Globe, Loader2 } from 'lucide-react';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 interface OrderItem {
   productId: string;
@@ -33,9 +35,13 @@ interface Order {
 interface InvoiceProps {
   order: Order;
   onClose: () => void;
+  formatPrice: (price: number) => string;
 }
 
-export function Invoice({ order, onClose }: InvoiceProps) {
+export function Invoice({ order, onClose, formatPrice }: InvoiceProps) {
+  const invoiceRef = useRef<HTMLDivElement>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+
   const formatDate = (date: any) => {
     if (!date) return 'N/A';
     if (date.toDate) return date.toDate().toLocaleDateString('en-US', { 
@@ -56,6 +62,100 @@ export function Invoice({ order, onClose }: InvoiceProps) {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!invoiceRef.current || isGenerating) return;
+
+    try {
+      setIsGenerating(true);
+      
+      // Target the printable element
+      const element = invoiceRef.current;
+      
+      // Create a canvas from the element
+      const canvas = await html2canvas(element, {
+        scale: 2, // Higher scale for better quality
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff', // Force white background for PDF
+        onclone: (clonedDoc) => {
+          // Ensure the cloned element is visible and in light mode
+          const clonedElement = clonedDoc.getElementById('invoice-printable');
+          if (clonedElement) {
+            clonedElement.style.padding = '40px';
+            clonedElement.classList.remove('dark');
+            
+            // Inject a style block to override oklch colors with hex values
+            // html2canvas has trouble parsing oklch colors from Tailwind v4
+            const style = clonedDoc.createElement('style');
+            style.innerHTML = `
+              #invoice-printable, #invoice-printable * {
+                color: #4A2B1A !important; /* slate-900 / accent */
+                border-color: #EED4C5 !important; /* slate-200 */
+                background-color: transparent !important;
+                box-shadow: none !important;
+                text-shadow: none !important;
+              }
+              #invoice-printable {
+                background-color: #ffffff !important;
+              }
+              .bg-primary {
+                background-color: #F7C6C7 !important; /* Pastel pink */
+              }
+              .text-primary {
+                color: #F7C6C7 !important;
+              }
+              .bg-slate-50 {
+                background-color: #ffffff !important;
+              }
+              .text-slate-400 {
+                color: #C0957D !important;
+              }
+              .text-slate-500 {
+                color: #A4755D !important;
+              }
+              .text-slate-200 {
+                color: #EED4C5 !important;
+              }
+              .border-slate-100 {
+                border-color: #F9EBE2 !important;
+              }
+              .border-slate-800 {
+                border-color: #5C3621 !important;
+              }
+              .divide-slate-100 > * + * {
+                border-color: #F9EBE2 !important;
+              }
+              .divide-slate-800 > * + * {
+                border-color: #5C3621 !important;
+              }
+              /* Force visibility for all text */
+              p, h1, h2, h3, h4, h5, h6, span, td, th {
+                visibility: visible !important;
+              }
+            `;
+            clonedDoc.head.appendChild(style);
+          }
+        }
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'px',
+        format: [canvas.width, canvas.height]
+      });
+
+      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+      pdf.save(`invoice-${order.id?.slice(-8).toUpperCase() || 'order'}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      // Fallback to print if PDF generation fails
+      window.print();
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -98,7 +198,7 @@ export function Invoice({ order, onClose }: InvoiceProps) {
 
         {/* Invoice Content */}
         <div className="flex-1 overflow-y-auto p-8 md:p-12 print:p-0 print:overflow-visible bg-white dark:bg-slate-900 print:bg-white">
-          <div id="invoice-printable" className="space-y-10 print:space-y-8">
+          <div id="invoice-printable" ref={invoiceRef} className="space-y-10 print:space-y-8 bg-white dark:bg-slate-900 p-4 rounded-xl">
             
             {/* Real World Invoice Header */}
             <div className="flex flex-col md:flex-row justify-between items-start gap-8">
@@ -173,8 +273,8 @@ export function Invoice({ order, onClose }: InvoiceProps) {
                         <p className="text-xs text-slate-400">Premium Bakery Item</p>
                       </td>
                       <td className="px-6 py-5 text-center text-slate-600 dark:text-slate-400 font-medium">{item.quantity}</td>
-                      <td className="px-6 py-5 text-right text-slate-600 dark:text-slate-400 font-medium">${item.price.toFixed(2)}</td>
-                      <td className="px-6 py-5 text-right font-bold text-slate-900 dark:text-white">${(item.price * item.quantity).toFixed(2)}</td>
+                      <td className="px-6 py-5 text-right text-slate-600 dark:text-slate-400 font-medium">{formatPrice(item.price)}</td>
+                      <td className="px-6 py-5 text-right font-bold text-slate-900 dark:text-white">{formatPrice(item.price * item.quantity)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -186,19 +286,19 @@ export function Invoice({ order, onClose }: InvoiceProps) {
               <div className="w-full md:w-72 space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-500">Subtotal</span>
-                  <span className="font-bold text-slate-900 dark:text-white">${subtotal.toFixed(2)}</span>
+                  <span className="font-bold text-slate-900 dark:text-white">{formatPrice(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-500">Shipping & Handling</span>
-                  <span className="font-bold text-slate-900 dark:text-white">${shipping.toFixed(2)}</span>
+                  <span className="font-bold text-slate-900 dark:text-white">{formatPrice(shipping)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-500">Sales Tax (8%)</span>
-                  <span className="font-bold text-slate-900 dark:text-white">${tax.toFixed(2)}</span>
+                  <span className="font-bold text-slate-900 dark:text-white">{formatPrice(tax)}</span>
                 </div>
                 <div className="pt-4 border-t-2 border-slate-900 dark:border-white flex justify-between items-center">
                   <span className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tighter">Total Due</span>
-                  <span className="text-3xl font-black text-primary print:text-slate-900">${order.total.toFixed(2)}</span>
+                  <span className="text-3xl font-black text-primary print:text-slate-900">{formatPrice(order.total)}</span>
                 </div>
               </div>
             </div>
@@ -225,20 +325,39 @@ export function Invoice({ order, onClose }: InvoiceProps) {
         </div>
 
         {/* Actions Footer - Hidden in Print */}
-        <div className="p-8 bg-slate-50 dark:bg-slate-800/50 flex gap-4 print:hidden">
+        <div className="p-8 bg-slate-50 dark:bg-slate-800/50 flex flex-col md:flex-row gap-4 print:hidden">
           <button 
             onClick={onClose}
             className="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold py-4 rounded-2xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
           >
             Back to Orders
           </button>
-          <button 
-            onClick={handlePrint}
-            className="flex-1 flex items-center justify-center gap-3 bg-primary text-slate-900 font-black py-4 rounded-2xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
-          >
-            <Download size={20} />
-            Download PDF / Print
-          </button>
+          <div className="flex-[2] flex gap-4">
+            <button 
+              onClick={handlePrint}
+              className="flex-1 flex items-center justify-center gap-3 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold py-4 rounded-2xl hover:bg-slate-300 dark:hover:bg-slate-600 transition-all"
+            >
+              <Printer size={20} />
+              Print
+            </button>
+            <button 
+              onClick={handleDownloadPDF}
+              disabled={isGenerating}
+              className="flex-[2] flex items-center justify-center gap-3 bg-primary text-slate-900 font-black py-4 rounded-2xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 size={20} className="animate-spin" />
+                  Generating PDF...
+                </>
+              ) : (
+                <>
+                  <Download size={20} />
+                  Download PDF
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </motion.div>
 

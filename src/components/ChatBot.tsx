@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MessageSquare, X, Send, Sparkles, ShoppingBag, ArrowRight, Loader2, Bot, User } from 'lucide-react';
+import { MessageSquare, X, Send, Sparkles, ShoppingBag, ArrowRight, Loader2, Bot, User, Trash2 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 import Markdown from 'react-markdown';
 import { Product } from '../App';
@@ -16,9 +16,10 @@ interface Message {
 interface ChatBotProps {
   products: Product[];
   onViewProduct: (product: Product) => void;
+  formatPrice: (price: number) => string;
 }
 
-export function ChatBot({ products, onViewProduct }: ChatBotProps) {
+export function ChatBot({ products, onViewProduct, formatPrice }: ChatBotProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -32,6 +33,44 @@ export function ChatBot({ products, onViewProduct }: ChatBotProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const chatRef = useRef<any>(null);
+
+  // Initialize chat session
+  useEffect(() => {
+    if (!products.length) return;
+
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+      
+      // Optimize product list for system instruction to save tokens
+      const productList = products.map(p => `- ${p.name} (${p.category}): ${formatPrice(p.price)} - ${p.description?.substring(0, 100)}...`).join('\n');
+
+      const systemInstruction = `You are Maggie, a friendly and helpful AI assistant for Magnolia Bakery. 
+      You help customers find products, answer questions about ingredients, and provide recommendations.
+      
+      Magnolia Bakery is famous for its Banana Pudding, cupcakes, and classic American desserts. 
+      We started in NYC's West Village in 1996.
+      
+      Our current product catalog:
+      ${productList}
+      
+      Guidelines:
+      - Be warm, sweet, and professional.
+      - If a customer asks for a recommendation, suggest 2-3 specific products from our catalog.
+      - Keep responses concise and use markdown for formatting.
+      - If you mention a product that exists in our catalog, format it exactly as [Product Name].
+      - Do not make up products that are not in the list.
+      - If you don't know something, be honest and offer to help with something else.
+      - If asked about locations, mention we have several locations in NYC (West Village, Upper West Side, Grand Central, etc.) and nationwide shipping.`;
+
+      chatRef.current = ai.chats.create({
+        model: "gemini-3-flash-preview",
+        config: { systemInstruction }
+      });
+    } catch (error) {
+      console.error("Failed to initialize Gemini chat:", error);
+    }
+  }, [products]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -50,6 +89,44 @@ export function ChatBot({ products, onViewProduct }: ChatBotProps) {
     setUnreadCount(0);
   };
 
+  const handleClearChat = () => {
+    setMessages([
+      {
+        id: '1',
+        role: 'assistant',
+        content: "Hi! I'm Maggie, your Magnolia Bakery assistant. How can I help you find the perfect treat today?",
+        timestamp: new Date()
+      }
+    ]);
+    // Re-initialize chat session to clear history
+    if (products.length) {
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+      const productList = products.map(p => `- ${p.name} (${p.category}): ${formatPrice(p.price)} - ${p.description?.substring(0, 100)}...`).join('\n');
+      const systemInstruction = `You are Maggie, a friendly and helpful AI assistant for Magnolia Bakery. 
+      You help customers find products, answer questions about ingredients, and provide recommendations.
+      
+      Magnolia Bakery is famous for its Banana Pudding, cupcakes, and classic American desserts. 
+      We started in NYC's West Village in 1996.
+      
+      Our current product catalog:
+      ${productList}
+      
+      Guidelines:
+      - Be warm, sweet, and professional.
+      - If a customer asks for a recommendation, suggest 2-3 specific products from our catalog.
+      - Keep responses concise and use markdown for formatting.
+      - If you mention a product that exists in our catalog, format it exactly as [Product Name].
+      - Do not make up products that are not in the list.
+      - If you don't know something, be honest and offer to help with something else.
+      - If asked about locations, mention we have several locations in NYC (West Village, Upper West Side, Grand Central, etc.) and nationwide shipping.`;
+
+      chatRef.current = ai.chats.create({
+        model: "gemini-3-flash-preview",
+        config: { systemInstruction }
+      });
+    }
+  };
+
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
@@ -65,28 +142,11 @@ export function ChatBot({ products, onViewProduct }: ChatBotProps) {
     setIsLoading(true);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+      if (!chatRef.current) {
+        throw new Error("Chat session not initialized");
+      }
 
-      const systemInstruction = `You are Maggie, a friendly and helpful AI assistant for Magnolia Bakery. 
-      You help customers find products, answer questions about ingredients, and provide recommendations.
-      
-      Our current product catalog:
-      ${JSON.stringify(products.map(p => ({ name: p.name, category: p.category, price: p.price, description: p.description })))}
-      
-      Guidelines:
-      - Be warm, sweet, and professional.
-      - If a customer asks for a recommendation, suggest 2-3 specific products from our catalog.
-      - Keep responses concise and use markdown for formatting.
-      - If you mention a product that exists in our catalog, format it exactly as [Product Name].
-      - Do not make up products that are not in the list.
-      - If you don't know something, be honest and offer to help with something else.`;
-
-      const chat = ai.chats.create({
-        model: "gemini-3-flash-preview",
-        config: { systemInstruction }
-      });
-
-      const response = await chat.sendMessage({ message: input });
+      const response = await chatRef.current.sendMessage({ message: input });
       const aiContent = response.text || "I'm sorry, I couldn't process that request.";
 
       // Extract products mentioned in the response
@@ -138,12 +198,21 @@ export function ChatBot({ products, onViewProduct }: ChatBotProps) {
                   </div>
                 </div>
               </div>
-              <button 
-                onClick={() => setIsOpen(false)}
-                className="p-2 hover:bg-white/10 rounded-full transition-colors text-slate-900"
-              >
-                <X size={20} />
-              </button>
+              <div className="flex items-center gap-1">
+                <button 
+                  onClick={handleClearChat}
+                  className="p-2 hover:bg-white/10 rounded-full transition-colors text-slate-900"
+                  title="Clear Chat"
+                >
+                  <Trash2 size={18} />
+                </button>
+                <button 
+                  onClick={() => setIsOpen(false)}
+                  className="p-2 hover:bg-white/10 rounded-full transition-colors text-slate-900"
+                >
+                  <X size={20} />
+                </button>
+              </div>
             </div>
 
             {/* Messages */}
@@ -181,7 +250,14 @@ export function ChatBot({ products, onViewProduct }: ChatBotProps) {
                             <img src={p.image} alt={p.alt} className="w-12 h-12 rounded-xl object-cover" />
                             <div className="flex-1 min-w-0">
                               <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{p.name}</p>
-                              <p className="text-[10px] text-primary font-bold">${p.price.toFixed(2)}</p>
+                              <div className="flex items-center gap-2">
+                                <p className="text-[10px] text-primary font-bold">{formatPrice(p.price)}</p>
+                                {p.stockQuantity <= 0 && (
+                                  <span className="text-[8px] px-1.5 py-0.5 bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 rounded uppercase font-bold tracking-wider">
+                                    Out of Stock
+                                  </span>
+                                )}
+                              </div>
                             </div>
                             <ArrowRight size={14} className="text-slate-300 group-hover:text-primary group-hover:translate-x-1 transition-all" />
                           </button>

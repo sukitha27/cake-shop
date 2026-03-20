@@ -26,6 +26,13 @@ async function startServer() {
       return res.status(400).json({ error: "Missing email or order details" });
     }
 
+    const formatPrice = (price: number) => {
+      if (orderDetails.currency === 'USD') {
+        return `$${price.toFixed(2)}`;
+      }
+      return `Rs. ${(price * 300).toLocaleString()}`;
+    };
+
     try {
       const { data, error } = await resend.emails.send({
         from: "Magnolia Bakery <onboarding@resend.dev>",
@@ -43,12 +50,12 @@ async function startServer() {
                 ${orderDetails.items.map((item: any) => `
                   <li style="display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px;">
                     <span>${item.name} (x${item.quantity})</span>
-                    <span style="font-weight: bold;">$${(item.price * item.quantity).toFixed(2)}</span>
+                    <span style="font-weight: bold;">${formatPrice(item.price * item.quantity)}</span>
                   </li>
                 `).join('')}
               </ul>
               <div style="text-align: right; font-size: 1.2em; font-weight: bold; margin-top: 15px; color: #6B4E3D;">
-                Total: $${orderDetails.total.toFixed(2)}
+                Total: ${formatPrice(orderDetails.total)}
               </div>
             </div>
             

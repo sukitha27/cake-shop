@@ -25,9 +25,10 @@ interface ProductDetailsProps {
   onBack: () => void;
   onAddToCart: (product: Product, e: React.MouseEvent) => void;
   isAdded: boolean;
+  formatPrice: (price: number) => string;
 }
 
-export function ProductDetails({ product, user, onBack, onAddToCart, isAdded }: ProductDetailsProps) {
+export function ProductDetails({ product, user, onBack, onAddToCart, isAdded, formatPrice }: ProductDetailsProps) {
   return (
     <motion.div 
       initial={{ opacity: 0 }}
@@ -82,7 +83,7 @@ export function ProductDetails({ product, user, onBack, onAddToCart, isAdded }: 
             </h1>
             <div className="flex items-center justify-between mb-6">
               <div className="text-2xl font-bold text-primary">
-                ${product.price.toFixed(2)}
+                {formatPrice(product.price)}
               </div>
               {product.stockQuantity > 0 ? (
                 <span className="text-sm font-medium text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1 rounded-full border border-emerald-100 dark:border-emerald-800">
